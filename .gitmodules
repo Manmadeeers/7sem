@@ -1,0 +1,6 @@
+[submodule "Distributed-Systems"]
+	path = Distributed-Systems
+	url = https://github.com/Manmadeeers/Distributed-Systems
+[submodule "DCT"]
+	path = DCT
+	url = https://github.com/Manmadeeers/DCT
