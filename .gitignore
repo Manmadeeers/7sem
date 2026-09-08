@@ -281,3 +281,6 @@ matplotlibrc
 # OS-specific files
 Thumbs.db
 Desktop.ini
+
+#IPDA-specific
+IPDA/*/lib/
