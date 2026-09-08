@@ -284,7 +284,7 @@ Desktop.ini
 
 #IPDA-specific
 IPDA/*/lib/
-IPDA/*lib64/
-IPDA/*bin/
-IPDA/*include/
+IPDA/*/lib64/
+IPDA/*/bin/
+IPDA/*/include/
 IPDA/*/pyvenv.cfg
