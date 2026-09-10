@@ -5,7 +5,15 @@ abstract interface class Forecastable {
 abstract class WeatherType {
   String? title;
   final double humidity;
-  WeatherType(this.title, this.humidity);
+  static int _refCoutner = 0;
+  WeatherType(this.title, this.humidity) {
+    _refCoutner++;
+  }
+
+  static int getRefCount() {
+    return _refCoutner;
+  }
+
   void applyEffect();
 }
 
@@ -18,11 +26,11 @@ class AtmosphericPressure {
 
 class Sunny extends WeatherType implements Forecastable, AtmosphericPressure {
   final double uvIndex;
-
   @override
   double? get pressure => 1013.25;
 
   Sunny(double humidity, this.uvIndex) : super("Sunny", humidity);
+
   Sunny.extreme() : this(0.0, 11.0);
 
   @override
@@ -76,6 +84,19 @@ void simulateWeather(WeatherType type, {bool log = true, int duration = 1}) {
   }
 }
 
+void executeWithFunction(WeatherType type, void Function(WeatherType) action) {
+  print("Executing action on ${type.title}");
+  action(type);
+}
+
+void executeOptional(WeatherType type, [String? note, int intencity = 1]) {
+  String description = "${type.title}(intencity $intencity)";
+  if (note != null) {
+    description += note;
+  }
+  print(description);
+}
+
 void main() {
   try {
     List<WeatherType> weatherToday = [
@@ -118,6 +139,18 @@ void main() {
 
       simulateWeather(weather, duration: 2);
     }
+
+    print("\n Testing static: ${WeatherType.getRefCount()}");
+
+    print("\n Testing function type parameter:");
+    executeWithFunction(Sunny(0, 4), (w) {
+      if (w is Sunny) {
+        print("Current UV index: ${w.uvIndex}");
+      }
+    });
+
+    print("\n Testing optional parameters:");
+    executeOptional(Rainy(1, 100), "Heavy rain", 4);
 
     print("\nTesting errors:");
     var rain = Rainy(0.8, 20);
