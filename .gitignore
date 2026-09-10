@@ -283,8 +283,12 @@ Thumbs.db
 Desktop.ini
 
 #IPDA-specific
-IPDA/*/lib/
+IPDA/**/lib/
 IPDA/*/lib64/
 IPDA/*/bin/
 IPDA/*/include/
 IPDA/*/pyvenv.cfg
+bin/
+lib64/
+include/
+pyvenv.cfg
