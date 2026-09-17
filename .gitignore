@@ -288,3 +288,7 @@ IPDA/**/lib64
 IPDA/**/bin/
 IPDA/**/include/
 pyvenv.cfg
+
+#WSP-specific
+WSP/**/bin/
+WSP/**/obj/
