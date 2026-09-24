@@ -11,12 +11,12 @@ namespace Lab1
         private const string SessionResultKey = "RESULT";
         private const string SessionStackKey = "Stack";
 
-        public bool IsReusable =>false;
+        public bool IsReusable => false;
 
         private void EnsureSessionInitialized(HttpContext context)
         {
-            if (context.Session[SessionResultKey] == null)
-                context.Session[SessionResultKey] = 0;
+            if (context.Application[SessionResultKey] == null)
+                context.Application[SessionResultKey] = 0;
 
             if (context.Session[SessionStackKey] == null)
                 context.Session[SessionStackKey] = new Stack<int>();
@@ -30,7 +30,7 @@ namespace Lab1
 
         private void HandleGet(HttpContext context)
         {
-            int result = (int)context.Session[SessionResultKey];
+            int result = (int)context.Application[SessionResultKey];
             WriteJson(context, new { RESULT = result });
         }
 
@@ -45,7 +45,7 @@ namespace Lab1
                 return;
             }
 
-            context.Session[SessionResultKey] = newResult;
+            context.Application[SessionResultKey] = newResult;
             WriteJson(context, new { RESULT = newResult });
 
 
@@ -81,15 +81,26 @@ namespace Lab1
             int poppedValue = stack.Pop();
             context.Session[SessionStackKey] = stack;
 
-            int currentResult = (int)context.Session[SessionResultKey];
+            int currentResult = (int)context.Application[SessionResultKey];
             int newResult = currentResult + poppedValue;
-            context.Session[SessionResultKey] = newResult;
+            context.Application[SessionResultKey] = newResult;
 
             WriteJson(context, new { RESULT = newResult, POP = poppedValue });
         }
 
         public void ProcessRequest(HttpContext context)
         {
+
+            context.Response.Headers["Access-Control-Allow-Origin"] = "*";
+            context.Response.Headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS";
+            context.Response.Headers["Access-Control-Allow-Headers"] = "Content-Type";
+
+            if (context.Request.HttpMethod == "OPTIONS")
+            {
+                context.Response.StatusCode = 200;
+                return;
+            }
+            
             context.Response.ContentType = "application/json";
             EnsureSessionInitialized(context);
 

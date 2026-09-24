@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lab1 REST service test</title>
+    <style>
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            max-width: 640px;
+            margin: 40px auto;
+            padding: 0 16px;
+            color: #222;
+        }
+
+        h1 {
+            font-size: 1.4em;
+            margin-bottom: 24px;
+        }
+
+        h2 {
+            font-size: 1em;
+            margin: 0 0 8px 0;
+            color: #555;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .show-result {
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            padding: 16px;
+            margin-bottom: 20px;
+            background: #fafafa;
+        }
+
+        .output {
+            font-size: 2em;
+            font-weight: bold;
+            color: #0a5;
+            min-height: 1.2em;
+            font-family: ui-monospace, monospace;
+        }
+
+        .process-get,
+        .process-post,
+        .process-put,
+        .process-delete {
+            margin-bottom: 12px;
+        }
+
+        input[type="number"] {
+            padding: 8px;
+            width: 120px;
+            margin-right: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 1em;
+        }
+
+        button {
+            padding: 8px 18px;
+            font-size: 1em;
+            cursor: pointer;
+            border: 1px solid #0a5;
+            background: #0a5;
+            color: white;
+            border-radius: 4px;
+        }
+
+        button:hover {
+            background: #085;
+        }
+
+        button:active {
+            background: #063;
+        }
+
+        .error {
+            color: #c00;
+        }
+    </style>
+</head>
+<body>
+    <h1>Lab1 REST service test</h1>
+
+    <div class="show-result">
+        <h2>RESULT</h2>
+        <div class="output" id="output">&ndash;</div>
+    </div>
+
+    <div class="process-get">
+        <button name="get-button" onclick="handleGET()">GET</button>
+    </div>
+
+    <div class="process-post">
+        <input type="number" name="RESULT-input" placeholder="RESULT...">
+        <button name="post-button" onclick="handlePOST()">POST</button>
+    </div>
+
+    <div class="process-put">
+        <input type="number" name="ADD-input" placeholder="ADD...">
+        <button name="put-button" onclick="handlePUT()">PUT</button>
+    </div>
+
+    <div class="process-delete">
+        <button name="delete-button" onclick="handleDELETE()">DELETE</button>
+    </div>
+
+    <script>
+        const SERVICE_URL = "http://192.168.122.79:8080/resource.FIA";
+
+        async function callService(method, body) {
+            const options = {
+                method: method,
+                credentials: "include"
+            };
+
+            if (body !== undefined && body !== null) {
+                options.headers = { "Content-Type": "application/x-www-form-urlencoded" };
+                options.body = body;
+            }
+
+            const response = await fetch(SERVICE_URL, options);
+            const text = await response.text();
+
+            let data;
+            try {
+                data = JSON.parse(text);
+            } catch (e) {
+                data = { raw: text };
+            }
+
+            return { status: response.status, data: data };
+        }
+
+        function updateOutput(data, isError) {
+            const el = document.getElementById("output");
+            el.classList.toggle("error", !!isError);
+
+            if (data && typeof data === "object" && "RESULT" in data) {
+                el.textContent = data.RESULT;
+            } else if (data && typeof data === "object" && "error" in data) {
+                el.textContent = data.error;
+                el.classList.add("error");
+            } else {
+                el.textContent = JSON.stringify(data);
+            }
+        }
+
+        async function handleGET() {
+            const result = await callService("GET");
+            updateOutput(result.data, result.status >= 400);
+        }
+
+        async function handlePOST() {
+            const value = document.querySelector("input[name='RESULT-input']").value;
+            console.log(value)
+            if (value === "") {
+                alert("Enter a value for RESULT");
+                return;
+            }
+
+            const body = "RESULT=" + encodeURIComponent(value);
+            const result = await callService("POST", body);
+            updateOutput(result.data, result.status >= 400);
+        }
+
+        async function handlePUT() {
+            const value = document.querySelector("input[name='ADD-input']").value;
+
+            if (value === "") {
+                alert("Enter a value for ADD");
+                return;
+            }
+
+            const body = "ADD=" + encodeURIComponent(value);
+            const result = await callService("PUT", body);
+
+            if (result.status >= 400) {
+                updateOutput(result.data, true);
+                return;
+            }
+
+            // PUT only pushes to the stack; RESULT itself is unchanged.
+            // Refresh the display so it stays accurate.
+            await handleGET();
+        }
+
+        async function handleDELETE() {
+            const result = await callService("DELETE");
+            updateOutput(result.data, result.status >= 400);
+        }
+
+        // Fetch the initial RESULT on page load
+        window.addEventListener("DOMContentLoaded", handleGET);
+    </script>
+</body>
+</html>
