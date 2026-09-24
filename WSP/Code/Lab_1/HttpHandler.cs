@@ -30,7 +30,13 @@ namespace Lab1
 
         private void HandleGet(HttpContext context)
         {
+            var stack = (Stack<int>)context.Session[SessionStackKey];
             int result = (int)context.Application[SessionResultKey];
+            if (stack.Count > 0)
+            {
+                result += stack.Peek();
+            }
+
             WriteJson(context, new { RESULT = result });
         }
 
@@ -81,11 +87,8 @@ namespace Lab1
             int poppedValue = stack.Pop();
             context.Session[SessionStackKey] = stack;
 
-            int currentResult = (int)context.Application[SessionResultKey];
-            int newResult = currentResult + poppedValue;
-            context.Application[SessionResultKey] = newResult;
 
-            WriteJson(context, new { RESULT = newResult, POP = poppedValue });
+            WriteJson(context, new { POP = poppedValue });
         }
 
         public void ProcessRequest(HttpContext context)
@@ -100,7 +103,7 @@ namespace Lab1
                 context.Response.StatusCode = 200;
                 return;
             }
-            
+
             context.Response.ContentType = "application/json";
             EnsureSessionInitialized(context);
 
