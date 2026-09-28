@@ -7,6 +7,8 @@ from sklearn.tree import DecisionTreeClassifier
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.model_selection import GridSearchCV
 from sklearn.metrics import accuracy_score, classification_report
+from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
+from sklearn.tree import plot_tree
 import matplotlib.pyplot as plt
 
 def loadData(path):
@@ -187,3 +189,73 @@ y_pred_knn_best = knn_best.predict(x_test_scaled)
 print(f"\nKNN (best) — Accuracy: "
       f"{accuracy_score(y_test, y_pred_knn_best):.4f}")
 print(classification_report(y_test, y_pred_knn_best, digits=4))
+
+print("\nConfusion matrix for both models");
+
+# Decision Tree
+cm_dt = confusion_matrix(y_test, y_pred_dt_best)
+
+print("Confusion Matrix — Decision Tree:")
+print(cm_dt)
+
+disp_dt = ConfusionMatrixDisplay(
+    confusion_matrix=cm_dt,
+    display_labels=dt_best.classes_
+)
+
+disp_dt.plot(cmap="Blues")
+plt.title("Confusion Matrix — Decision Tree")
+plt.show()
+
+
+# KNN
+cm_knn = confusion_matrix(y_test, y_pred_knn_best)
+
+print("Confusion Matrix — KNN:")
+print(cm_knn)
+
+disp_knn = ConfusionMatrixDisplay(
+    confusion_matrix=cm_knn,
+    display_labels=knn_best.classes_
+)
+
+disp_knn.plot(cmap="Blues")
+plt.title("Confusion Matrix — KNN")
+plt.show()
+
+print("\nCOmpating models")
+
+acc_dt_best = accuracy_score(y_test, y_pred_dt_best)
+acc_knn_best = accuracy_score(y_test, y_pred_knn_best)
+
+print(f"Decision Tree accuracy: {acc_dt_best:.4f}")
+print(f"KNN accuracy:           {acc_knn_best:.4f}")
+
+if acc_dt_best > acc_knn_best:
+    print("\nBest model: Decision Tree")
+    best_model = dt_best
+
+elif acc_knn_best > acc_dt_best:
+    print("\nBest model: KNN")
+    best_model = knn_best
+
+else:
+    print("\nBoth models have the same accuracy")
+
+
+print("\nBest model visualization")
+
+plt.figure(figsize=(24, 12))
+
+plot_tree(
+    dt_best,
+    feature_names=x_train.columns,
+    class_names=[str(c) for c in dt_best.classes_],
+    filled=True,
+    rounded=True,
+    max_depth=3,
+    fontsize=8
+)
+
+plt.title("Decision Tree")
+plt.show()
