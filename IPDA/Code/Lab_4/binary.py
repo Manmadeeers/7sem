@@ -1,261 +1,574 @@
-import numpy as np
+import hashlib
+from pathlib import Path
+import joblib
 import pandas as pd
-import seaborn as sb
-from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import StandardScaler
-from sklearn.tree import DecisionTreeClassifier
-from sklearn.neighbors import KNeighborsClassifier
-from sklearn.model_selection import GridSearchCV
-from sklearn.metrics import accuracy_score, classification_report
-from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
-from sklearn.tree import plot_tree
 import matplotlib.pyplot as plt
+
+from sklearn.model_selection import train_test_split, GridSearchCV
+from sklearn.preprocessing import StandardScaler
+from sklearn.compose import ColumnTransformer
+from sklearn.pipeline import Pipeline
+from sklearn.tree import DecisionTreeClassifier, plot_tree
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.metrics import (
+    accuracy_score,
+    classification_report,
+    confusion_matrix,
+    ConfusionMatrixDisplay
+)
+from sklearn.decomposition import PCA
+
+
+DATA_PATH = "./data.csv"
+CACHE_PATH = "./best_models.joblib"
+
+CACHE_VERSION = 1
+
+NUM_FEATURES = [
+    "person_age",
+    "person_income",
+    "person_emp_exp",
+    "loan_amnt",
+    "loan_int_rate",
+    "loan_percent_income",
+    "cb_person_cred_hist_length",
+    "credit_score"
+]
+
+
+def get_file_hash(path):
+    sha256 = hashlib.sha256()
+
+    with open(path, "rb") as f:
+        while True:
+            chunk = f.read(8192)
+
+            if not chunk:
+                break
+
+            sha256.update(chunk)
+
+    return sha256.hexdigest()
+
 
 def loadData(path):
     data = pd.read_csv(path)
+
     print("Data loaded")
+    print(f"Shape: {data.shape}")
+
     return data
 
+
 def preProcess(data):
+    print("\nInitial information:")
     data.info()
-    print(f"\nNull values:\n{data[data.eq(0)].count()}")
+
+    print("\nMissing values:")
+    print(data.isnull().sum())
+
+    print("\nDeleting anomalies...")
+
+    data = data[
+        (data["person_age"] <= 100) &
+        (data["person_emp_exp"] <= 60)
+    ].copy()
+
+    print(f"Shape after anomaly removal: {data.shape}")
+
+    print("\nConverting categorical features to numeric...")
+
+    data["person_gender"] = data["person_gender"].map({
+        "male": 0,
+        "female": 1
+    })
+
+    data["previous_loan_defaults_on_file"] = (
+        data["previous_loan_defaults_on_file"].map({
+            "No": 0,
+            "Yes": 1
+        })
+    )
     
-    
-    print("\nDeleting anomalies:")
-    data = data[(data['person_age'] <= 100) & (data['person_emp_exp'] <= 60)]
-    
-    print(f"\nMissings count:\n{data.isnull().sum()}")
-    
-    print("\nConverting categorized to numeric");
-    data['person_gender'] = data['person_gender'].map({'male': 0, 'female': 1})
-    data['previous_loan_defaults_on_file'] = data['previous_loan_defaults_on_file'].map({'No': 0, 'Yes': 1})
-    
-    data = pd.get_dummies(data, columns=['person_education', 'person_home_ownership', 'loan_intent'], drop_first=True)
-    
-    data.info()
-    
+    data = pd.get_dummies(
+        data,
+        columns=[
+            "person_education",
+            "person_home_ownership",
+            "loan_intent"
+        ],
+        drop_first=True,
+        dtype=int
+    )
+
+
+    print("\nMissing values after conversion:")
+    print(data.isnull().sum())
+
+    if data.isnull().sum().sum() > 0:
+        print("\nDropping rows containing missing values...")
+        data = data.dropna()
+
     dups = data.duplicated().sum()
-    print(f"\nCounting dupplicates: {dups}")
-    if dups!=0:
-        print("\nDropping dupplicates:")
-        data = data.drop_duplicates();
-        data.info();
-        
-        
+
+    print(f"\nDuplicates: {dups}")
+
+    if dups > 0:
+        print("Dropping duplicates...")
+        data = data.drop_duplicates()
+
+    print("\nFinal information:")
+    data.info()
+
     return data
 
 
 def makeMatrix(data):
-    y=data['loan_status']
-    X=data.drop(columns=['loan_status'])
-    print(f"\nX: {X.shape}")
-    print(f"\nY: {y.shape}")
-    
-    
-    
-    return [X,y]
+    y = data["loan_status"]
+    X = data.drop(columns=["loan_status"])
+
+    print(f"\nX shape: {X.shape}")
+    print(f"Y shape: {y.shape}")
+
+    return X, y
+
 
 def splittingData(X, y):
     X_train, X_test, y_train, y_test = train_test_split(
-    X, y,
-    test_size=0.2,
-    random_state=42,
-    stratify=y)
-    
-    print(f"Train: {X_train.shape}")
-    print(f"Test: {X_test.shape}")
-
-    return [X_train,X_test,y_train,y_test]
-
-def scaleData(X_train,X_test):
-    num_features = ['person_age', 'person_income', 'person_emp_exp', 'loan_amnt',
-                'loan_int_rate', 'loan_percent_income',
-                'cb_person_cred_hist_length', 'credit_score']
-    
-    scaler = StandardScaler()
-    X_train_scaled = X_train.copy()
-    X_test_scaled  = X_test.copy()
-    X_train_scaled[num_features] = scaler.fit_transform(X_train[num_features])
-    X_test_scaled[num_features]  = scaler.transform(X_test[num_features])
-    
-    return [X_test_scaled,X_train_scaled]
-
-
-def grid_search_models(X_train, y_train, X_train_scaled,
-                       cv=5, scoring='accuracy'):
-    dt_param_grid = {
-        'max_depth': [3, 5, 7, 10, 15, 20, None],
-        'min_samples_leaf': [1, 3, 5, 10, 20],
-        'min_samples_split': [2, 5, 10],
-        'criterion': ['gini', 'entropy']
-    }
-    dt_gs = GridSearchCV(
-        DecisionTreeClassifier(random_state=42),
-        dt_param_grid,
-        cv=cv, scoring=scoring, n_jobs=-1
+        X,
+        y,
+        test_size=0.2,
+        random_state=42,
+        stratify=y
     )
+
+    print(f"\nTrain: {X_train.shape}")
+    print(f"Test:  {X_test.shape}")
+
+    return X_train, X_test, y_train, y_test
+
+
+
+def make_knn_pipeline():
+
+    preprocessing = ColumnTransformer(
+        transformers=[
+            (
+                "scale",
+                StandardScaler(),
+                NUM_FEATURES
+            )
+        ],
+        remainder="passthrough"
+    )
+
+    pipeline = Pipeline([
+        ("preprocessing", preprocessing),
+        ("knn", KNeighborsClassifier())
+    ])
+
+    return pipeline
+
+
+
+def train_base_models(X_train, y_train):
+    print("\n=== Building base Decision Tree ===")
+
+    dt = DecisionTreeClassifier(
+        criterion="gini",
+        max_depth=5,
+        min_samples_leaf=5,
+        random_state=42
+    )
+
+    dt.fit(X_train, y_train)
+
+    print("\n=== Building base KNN ===")
+
+    knn = make_knn_pipeline()
+
+    knn.set_params(
+        knn__n_neighbors=5,
+        knn__weights="uniform",
+        knn__p=2
+    )
+
+    knn.fit(X_train, y_train)
+
+    return dt, knn
+
+
+
+def grid_search_models(X_train, y_train, cv=5, scoring="accuracy"):
+
+
+    dt_param_grid = {
+        "max_depth": [3, 5, 7, 10, 15, 20, None],
+        "min_samples_leaf": [1, 3, 5, 10, 20],
+        "min_samples_split": [2, 5, 10],
+        "criterion": ["gini", "entropy"]
+    }
+
+    dt_gs = GridSearchCV(
+        estimator=DecisionTreeClassifier(random_state=42),
+        param_grid=dt_param_grid,
+        cv=cv,
+        scoring=scoring,
+        n_jobs=-1
+    )
+
+    print("\nSearching best Decision Tree parameters...")
+
     dt_gs.fit(X_train, y_train)
-    print("=== Decision Tree ===")
-    print(f"Лучшие параметры: {dt_gs.best_params_}")
-    print(f"Лучший CV-score: {dt_gs.best_score_:.4f}")
+
+    print("\n=== Decision Tree ===")
+    print(f"Best parameters: {dt_gs.best_params_}")
+    print(f"Best CV score:   {dt_gs.best_score_:.4f}")
+
+
+    knn_pipeline = make_knn_pipeline()
 
     knn_param_grid = {
-        'n_neighbors': list(range(3, 32, 2)),
-        'weights': ['uniform', 'distance'],
-        'p': [1, 2]         
+        "knn__n_neighbors": list(range(3, 32, 2)),
+        "knn__weights": ["uniform", "distance"],
+        "knn__p": [1, 2]
     }
+
     knn_gs = GridSearchCV(
-        KNeighborsClassifier(),
-        knn_param_grid,
-        cv=cv, scoring=scoring, n_jobs=-1
+        estimator=knn_pipeline,
+        param_grid=knn_param_grid,
+        cv=cv,
+        scoring=scoring,
+        n_jobs=-1
     )
-    knn_gs.fit(X_train_scaled, y_train)
+
+    print("\nSearching best KNN parameters...")
+
+    knn_gs.fit(X_train, y_train)
+
     print("\n=== KNN ===")
-    print(f"Лучшие параметры: {knn_gs.best_params_}")
-    print(f"Лучший CV-score: {knn_gs.best_score_:.4f}")
+    print(f"Best parameters: {knn_gs.best_params_}")
+    print(f"Best CV score:   {knn_gs.best_score_:.4f}")
 
     return dt_gs.best_estimator_, knn_gs.best_estimator_
 
 
 
+def get_best_models(X_train, y_train, data_hash):
+    cache_file = Path(CACHE_PATH)
+
+    if cache_file.exists():
+        print("\nSaved models found. Checking cache...")
+
+        saved = joblib.load(cache_file)
+
+        correct_version = (
+            saved.get("cache_version") == CACHE_VERSION
+        )
+
+        same_data = (
+            saved.get("data_hash") == data_hash
+        )
+
+        same_features = (
+            saved.get("features") == list(X_train.columns)
+        )
+
+        if correct_version and same_data and same_features:
+            print("Cached models are valid.")
+            print("Loading models without GridSearchCV...")
+
+            return (
+                saved["decision_tree"],
+                saved["knn"]
+            )
+
+        print("Dataset or configuration changed.")
+        print("Models will be trained again.")
+
+    best_dt, best_knn = grid_search_models(
+        X_train,
+        y_train
+    )
+
+    print("\nSaving trained models...")
+
+    joblib.dump(
+        {
+            "cache_version": CACHE_VERSION,
+            "data_hash": data_hash,
+            "features": list(X_train.columns),
+
+            "decision_tree": best_dt,
+            "knn": best_knn
+        },
+        CACHE_PATH
+    )
+
+    print(f"Models saved to: {CACHE_PATH}")
+
+    return best_dt, best_knn
+
+
+
+def evaluate_model(name, model, X_test, y_test):
+    predictions = model.predict(X_test)
+
+    accuracy = accuracy_score(
+        y_test,
+        predictions
+    )
+
+    print(f"\n=== {name} ===")
+    print(f"Accuracy: {accuracy:.4f}")
+
+    print(
+        classification_report(
+            y_test,
+            predictions,
+            digits=4,
+            zero_division=0
+        )
+    )
+
+    return predictions, accuracy
+
+
+def show_confusion_matrix(name, model, y_test, predictions):
+    cm = confusion_matrix(
+        y_test,
+        predictions
+    )
+
+    print(f"\nConfusion Matrix — {name}:")
+    print(cm)
+
+    display = ConfusionMatrixDisplay(
+        confusion_matrix=cm,
+        display_labels=model.classes_
+    )
+
+    display.plot(cmap="Blues")
+
+    plt.title(
+        f"Confusion Matrix — {name}"
+    )
+
+    plt.show()
+
+
+
+def visualize_tree(model, feature_names):
+    print("\nDecision Tree visualization")
+
+    plt.figure(figsize=(24, 12))
+
+    plot_tree(
+        model,
+        feature_names=feature_names,
+        class_names=[
+            str(c)
+            for c in model.classes_
+        ],
+        filled=True,
+        rounded=True,
+
+        max_depth=3,
+
+        fontsize=8
+    )
+
+    plt.title("Decision Tree")
+
+    plt.tight_layout()
+    plt.show()
+
+def visualize_knn(model, X_test):
+    print("\nKNN visualization")
+
+    preprocessing = model.named_steps["preprocessing"]
+    knn = model.named_steps["knn"]
+    X_processed = preprocessing.transform(X_test)
+
+    pca = PCA(n_components=2)
+    X_2d = pca.fit_transform(X_processed)
+
+    predictions = model.predict(X_test)
+
+    plt.figure(figsize=(10, 7))
+
+    scatter = plt.scatter(
+        X_2d[:, 0],
+        X_2d[:, 1],
+        c=predictions,
+        cmap="coolwarm",
+        alpha=0.7
+    )
+
+    plt.xlabel("PCA component 1")
+    plt.ylabel("PCA component 2")
+    plt.title(
+        f"KNN predictions "
+        f"(k={knn.n_neighbors}, "
+        f"weights={knn.weights}, p={knn.p})"
+    )
+
+    plt.colorbar(
+        scatter,
+        label="Predicted class"
+    )
+
+    plt.grid(alpha=0.3)
+    plt.show()
+    
+    
+
 print("Loading data")
-data = loadData("./data.csv")
+
+data_hash = get_file_hash(DATA_PATH)
+
+data = loadData(DATA_PATH)
+
+
 print("\nPreprocessing data")
+
 data = preProcess(data)
 
-print("\nCreating matricies")
-matrixArray = makeMatrix(data)
 
-print("\nDeviding data into learning and test data")
-testAndTrain = splittingData(matrixArray[0],matrixArray[1])
-x_train = testAndTrain[0]
-x_test = testAndTrain[1]
-y_train = testAndTrain[2]
-y_test = testAndTrain[3]
+print("\nCreating X and y")
 
-print("\nScaling data for KNN")
-scaled = scaleData(testAndTrain[0],testAndTrain[1])
-x_test_scaled = scaled[0]
-x_train_scaled = scaled[1]
+X, y = makeMatrix(data)
 
 
-print("\nBuilding decision tree")
+print("\nDividing data into training and test sets")
 
-dt = DecisionTreeClassifier(
-    criterion='gini',
-    max_depth=5,         
-    min_samples_leaf=5,
-    random_state=42
+x_train, x_test, y_train, y_test = splittingData(
+    X,
+    y
 )
 
-dt.fit(x_train,y_train)
-y_pred_dt = dt.predict(x_test)
 
-acc_dt = accuracy_score(y_test, y_pred_dt)
-print(f"Decision Tree — Accuracy: {acc_dt:.4f}")
-print(classification_report(y_test, y_pred_dt, digits=4))
 
-print("\nBuilding KNN")
+print("\nTraining base models")
 
-knn = KNeighborsClassifier(
-    n_neighbors=5,
-    weights='uniform',
-    metric='minkowski',
-    p=2                
+dt, knn = train_base_models(
+    x_train,
+    y_train
 )
 
-knn.fit(x_train_scaled,y_train)
-y_pred_knn = knn.predict(x_test_scaled)
 
-acc_knn = accuracy_score(y_test, y_pred_knn)
-print(f"KNN (k=5) — Accuracy: {acc_knn:.4f}")
-print(classification_report(y_test, y_pred_knn, digits=4))
+print("\nEvaluating base Decision Tree")
 
-
-print("\nFinding the best parameters")
-best_dt_model, best_knn_model = grid_search_models(x_train, y_train, x_train_scaled)
-
-print("\nFinal models evaluation with best found parameters")
-
-dt_best  = best_dt_model
-knn_best = best_knn_model
-
-y_pred_dt_best  = dt_best.predict(x_test)
-print(f"\nDecision Tree (best) — Accuracy: "
-      f"{accuracy_score(y_test, y_pred_dt_best):.4f}")
-print(classification_report(y_test, y_pred_dt_best, digits=4))
-
-y_pred_knn_best = knn_best.predict(x_test_scaled)
-print(f"\nKNN (best) — Accuracy: "
-      f"{accuracy_score(y_test, y_pred_knn_best):.4f}")
-print(classification_report(y_test, y_pred_knn_best, digits=4))
-
-print("\nConfusion matrix for both models");
-
-# Decision Tree
-cm_dt = confusion_matrix(y_test, y_pred_dt_best)
-
-print("Confusion Matrix — Decision Tree:")
-print(cm_dt)
-
-disp_dt = ConfusionMatrixDisplay(
-    confusion_matrix=cm_dt,
-    display_labels=dt_best.classes_
+y_pred_dt, acc_dt = evaluate_model(
+    "Decision Tree (base)",
+    dt,
+    x_test,
+    y_test
 )
 
-disp_dt.plot(cmap="Blues")
-plt.title("Confusion Matrix — Decision Tree")
-plt.show()
 
+print("\nEvaluating base KNN")
 
-# KNN
-cm_knn = confusion_matrix(y_test, y_pred_knn_best)
-
-print("Confusion Matrix — KNN:")
-print(cm_knn)
-
-disp_knn = ConfusionMatrixDisplay(
-    confusion_matrix=cm_knn,
-    display_labels=knn_best.classes_
+y_pred_knn, acc_knn = evaluate_model(
+    "KNN (base)",
+    knn,
+    x_test,
+    y_test
 )
 
-disp_knn.plot(cmap="Blues")
-plt.title("Confusion Matrix — KNN")
-plt.show()
 
-print("\nCOmpating models")
 
-acc_dt_best = accuracy_score(y_test, y_pred_dt_best)
-acc_knn_best = accuracy_score(y_test, y_pred_knn_best)
+print("\nGetting best models")
 
-print(f"Decision Tree accuracy: {acc_dt_best:.4f}")
-print(f"KNN accuracy:           {acc_knn_best:.4f}")
+dt_best, knn_best = get_best_models(
+    x_train,
+    y_train,
+    data_hash
+)
+
+
+print("\nFinal evaluation")
+
+y_pred_dt_best, acc_dt_best = evaluate_model(
+    "Decision Tree (best)",
+    dt_best,
+    x_test,
+    y_test
+)
+
+y_pred_knn_best, acc_knn_best = evaluate_model(
+    "KNN (best)",
+    knn_best,
+    x_test,
+    y_test
+)
+
+
+
+show_confusion_matrix(
+    "Decision Tree",
+    dt_best,
+    y_test,
+    y_pred_dt_best
+)
+
+show_confusion_matrix(
+    "KNN",
+    knn_best,
+    y_test,
+    y_pred_knn_best
+)
+
+
+
+print("\nComparing models")
+
+print(
+    f"Decision Tree accuracy: "
+    f"{acc_dt_best:.4f}"
+)
+
+print(
+    f"KNN accuracy:           "
+    f"{acc_knn_best:.4f}"
+)
+
 
 if acc_dt_best > acc_knn_best:
     print("\nBest model: Decision Tree")
+
     best_model = dt_best
+    best_model_name = "Decision Tree"
 
 elif acc_knn_best > acc_dt_best:
     print("\nBest model: KNN")
+
     best_model = knn_best
+    best_model_name = "KNN"
 
 else:
     print("\nBoth models have the same accuracy")
 
+    best_model = dt_best
+    best_model_name = "Decision Tree"
 
-print("\nBest model visualization")
 
-plt.figure(figsize=(24, 12))
 
-plot_tree(
-    dt_best,
-    feature_names=x_train.columns,
-    class_names=[str(c) for c in dt_best.classes_],
-    filled=True,
-    rounded=True,
-    max_depth=3,
-    fontsize=8
+print(
+    f"\nVisualizing best model: "
+    f"{best_model_name}"
 )
 
-plt.title("Decision Tree")
-plt.show()
+if best_model_name == "Decision Tree":
+
+    visualize_tree(
+        best_model,
+        x_train.columns
+    )
+
+elif best_model_name == "KNN":
+
+    visualize_knn(
+        best_model,
+        x_test
+    )
