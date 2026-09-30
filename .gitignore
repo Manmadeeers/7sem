@@ -292,3 +292,5 @@ pyvenv.cfg
 #WSP-specific
 [Bb]in/
 [Oo]bj/
+artifacts/
+nuget-local/
