@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+  <PropertyGroup>
+    <AssemblyName>REST01</AssemblyName>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference
+      Include="BSTU.Results.Collection"
+      Version="1.0.0" />
+
+    <PackageReference
+      Include="BSTU.Results.Authenticate"
+      Version="1.0.0" />
+  </ItemGroup>
+</Project>

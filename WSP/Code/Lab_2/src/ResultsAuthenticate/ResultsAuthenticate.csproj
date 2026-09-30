@@ -1,0 +1,24 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <AssemblyName>Results Authenticate</AssemblyName>
+    <PackageId>BSTU.Results.Authenticate</PackageId>
+    <Authors>BSTU</Authors>
+    <Description>Scoped ASP.NET Core Identity authentication and JWT role tokens.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+
+    <PackageReference
+      Include="Microsoft.AspNetCore.Authentication.JwtBearer"
+      Version="$(MicrosoftPackagesVersion)" />
+
+    <PackageReference
+      Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore"
+      Version="$(MicrosoftPackagesVersion)" />
+
+    <PackageReference
+      Include="Microsoft.EntityFrameworkCore.Sqlite"
+      Version="$(MicrosoftPackagesVersion)" />
+  </ItemGroup>
+</Project>

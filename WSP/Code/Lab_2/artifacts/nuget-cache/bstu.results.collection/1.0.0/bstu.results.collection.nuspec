@@ -1,0 +1,18 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2012/06/nuspec.xsd">
+  <metadata>
+    <id>BSTU.Results.Collection</id>
+    <version>1.0.0</version>
+    <authors>BSTU</authors>
+    <description>Thread-safe JSON file collection with persistent auto-increment keys.</description>
+    <repository type="git" commit="de1e7cc6eaec003e6fc26c66c8da9aebca21b669" />
+    <dependencies>
+      <group targetFramework="net10.0" />
+    </dependencies>
+    <frameworkReferences>
+      <group targetFramework="net10.0">
+        <frameworkReference name="Microsoft.AspNetCore.App" />
+      </group>
+    </frameworkReferences>
+  </metadata>
+</package>

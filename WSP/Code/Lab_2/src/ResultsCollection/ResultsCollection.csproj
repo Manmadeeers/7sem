@@ -1,0 +1,12 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <AssemblyName>ResultsCollection</AssemblyName>
+    <PackageId>BSTU.Results.Collection</PackageId>
+    <Authors>BSTU</Authors>
+    <Description>Thread-safe JSON file collection with persistent auto-increment keys.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+</Project>
