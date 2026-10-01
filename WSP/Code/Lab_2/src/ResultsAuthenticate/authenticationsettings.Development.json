@@ -1,0 +1,22 @@
+{
+  "Jwt": {
+    "SigningKey": "REST01-DEVELOPMENT-ONLY-KEY-CHANGE-ME-2026"
+  },
+  "DemoUsers": [
+    {
+      "Login": "reader",
+      "Password": "Reader123!",
+      "Roles": ["READER"]
+    },
+    {
+      "Login": "writer",
+      "Password": "Writer123!",
+      "Roles": ["WRITER"]
+    },
+    {
+      "Login": "both",
+      "Password": "Both123!",
+      "Roles": ["READER", "WRITER"]
+    }
+  ]
+}

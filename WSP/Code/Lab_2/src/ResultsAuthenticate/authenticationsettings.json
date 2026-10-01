@@ -1,0 +1,8 @@
+{
+  "IdentityFilePath": "App_Data/identity.db",
+  "Jwt": {
+    "Issuer": "REST01",
+    "Audience": "REST01.Client",
+    "LifetimeMinutes": 60
+  }
+}

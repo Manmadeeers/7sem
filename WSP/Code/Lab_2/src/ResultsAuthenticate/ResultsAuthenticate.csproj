@@ -2,6 +2,7 @@
   <PropertyGroup>
     <AssemblyName>Results Authenticate</AssemblyName>
     <PackageId>BSTU.Results.Authenticate</PackageId>
+    <Version>1.0.1</Version>
     <Authors>BSTU</Authors>
     <Description>Scoped ASP.NET Core Identity authentication and JWT role tokens.</Description>
   </PropertyGroup>
@@ -20,5 +21,17 @@
     <PackageReference
       Include="Microsoft.EntityFrameworkCore.Sqlite"
       Version="$(MicrosoftPackagesVersion)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource
+      Include="authenticationsettings.json"
+      LogicalName="BSTU.Results.Authenticate.authenticationsettings.json"
+      WithCulture="false" />
+
+    <EmbeddedResource
+      Include="authenticationsettings.Development.json"
+      LogicalName="BSTU.Results.Authenticate.authenticationsettings.Development.json"
+      WithCulture="false" />
   </ItemGroup>
 </Project>
