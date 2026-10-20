@@ -214,7 +214,7 @@ cython_debug/
 
 # IDEs and Editors
 .vscode/
-.idea/
+.1idea/
 *.swp
 *.swo
 *~
@@ -257,3 +257,6 @@ nuget-local/
 MAP/**/android
 MAP/**/ios
 MAP/**/web
+MAP/**/linux
+MAP/**/macos
+MAP/**/windows
