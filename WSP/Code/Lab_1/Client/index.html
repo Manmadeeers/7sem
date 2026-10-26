@@ -3,319 +3,337 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>WS01 Test Client</title>
-
+  <meta name="color-scheme" content="dark">
+  <title>WS01 — Stack Console</title>
   <style>
-    * {
-      box-sizing: border-box;
+    :root {
+      --bg: #111411;
+      --panel: #191d19;
+      --inset: #121612;
+      --line: #353d33;
+      --text: #edf0e6;
+      --muted: #a0ab98;
+      --lime: #d4f778;
+      --orange: #ffb07b;
+      --red: #ff9c8d;
+      --mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
     }
 
+    * { box-sizing: border-box; }
     body {
       margin: 0;
-      padding: 24px;
-      font-family: system-ui, sans-serif;
-      color: #1e293b;
-      background: #f1f5f9;
-    }
-
-    main {
-      max-width: 850px;
-      margin: auto;
-    }
-
-    h1 {
-      margin-bottom: 6px;
-    }
-
-    p {
-      color: #64748b;
+      background: var(--bg);
+      color: var(--text);
+      font-family: "Segoe UI", system-ui, sans-serif;
       line-height: 1.5;
     }
-
-    section {
-      margin-top: 20px;
-      padding: 24px;
-      border: 1px solid #e2e8f0;
-      border-radius: 12px;
-      background: white;
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      z-index: -1;
+      opacity: .16;
+      background-image: radial-gradient(#89987a .65px, transparent .65px);
+      background-size: 18px 18px;
+      pointer-events: none;
     }
-
-    label {
+    main { max-width: 1440px; margin: auto; padding: 28px 36px 32px; }
+    .masthead, .brand, .panel-heading, .history-heading, .footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .masthead { border-bottom: 1px solid var(--line); padding-bottom: 21px; }
+    .brand { justify-content: flex-start; gap: 13px; }
+    .brand-icon {
+      width: 36px;
+      height: 36px;
+      display: grid;
+      align-content: center;
+      gap: 3px;
+      padding: 8px;
+      background: var(--lime);
+    }
+    .brand-icon span { display: block; height: 3px; background: var(--bg); }
+    .brand-icon span:nth-child(2) { width: 75%; }
+    .brand-icon span:nth-child(3) { width: 50%; }
+    .brand-name { font-weight: 700; font-size: 16px; letter-spacing: -.3px; }
+    .eyebrow, .version, .section-number, .label-meta, .footer, .method {
+      font-family: var(--mono);
+      text-transform: uppercase;
+      font-size: 11px;
+      letter-spacing: 1.4px;
+    }
+    .version { color: var(--muted); }
+    .intro { display: flex; justify-content: space-between; align-items: end; gap: 28px; padding: 34px 0; }
+    .eyebrow { color: var(--lime); margin: 0 0 10px; }
+    h1 { margin: 0; font-size: clamp(38px, 5vw, 66px); line-height: 1.03; letter-spacing: -3px; font-weight: 600; }
+    h1 span { color: var(--lime); }
+    .intro p { max-width: 320px; margin: 0 0 3px; color: var(--muted); font-size: 14px; }
+    .workbench { display: grid; grid-template-columns: 340px minmax(0, 1fr); gap: 18px; align-items: start; }
+    .panel { border: 1px solid var(--line); background: var(--panel); min-width: 0; }
+    .panel-heading { padding: 18px 20px; border-bottom: 1px solid var(--line); }
+    h2 { font-size: 14px; font-weight: 600; margin: 0; }
+    .section-number { color: var(--muted); }
+    .controls-body { padding: 22px 20px; }
+    .field { min-width: 0; }
+    label { display: block; margin-bottom: 9px; font-size: 12px; font-weight: 600; }
+    input, select, button { font: inherit; }
+    input, select {
       display: block;
-      margin-bottom: 8px;
-      font-weight: 600;
-    }
-
-    input,
-    select,
-    button {
-      padding: 11px 12px;
-      border: 1px solid #cbd5e1;
-      border-radius: 6px;
-      font: inherit;
-    }
-
-    input,
-    select {
       width: 100%;
-      background: white;
+      min-width: 0;
+      height: 46px;
+      border: 1px solid #485140;
+      border-radius: 2px;
+      background: var(--inset);
+      color: var(--text);
+      padding: 0 12px;
+      font-family: var(--mono);
+      font-size: 13px;
     }
-
-    input:focus,
-    select:focus,
-    button:focus-visible {
-      outline: 2px solid #2563eb;
-      outline-offset: 2px;
+    select { cursor: pointer; }
+    input[type="number"] { font-size: 19px; }
+    input:focus-visible, select:focus-visible, button:focus-visible {
+      outline: 2px solid var(--lime);
+      outline-offset: 3px;
     }
-
     button {
       cursor: pointer;
-      color: white;
-      background: #2563eb;
-      border-color: #2563eb;
-      font-weight: 600;
+      min-height: 44px;
+      padding: 11px 15px;
+      border: 1px solid transparent;
+      border-radius: 2px;
+      background: var(--lime);
+      color: #1b2410;
+      font-size: 12px;
+      font-weight: 750;
+      transition: background .15s ease, border-color .15s ease;
     }
-
-    button:hover {
-      opacity: 0.9;
-    }
-
-    button:disabled {
-      cursor: wait;
-      opacity: 0.5;
-    }
-
-    .row {
-      display: flex;
-      gap: 12px;
-      align-items: end;
-      margin-bottom: 18px;
-    }
-
-    .field {
-      flex: 1;
-      min-width: 0;
-    }
-
-    .row button {
-      flex-shrink: 0;
-    }
-
-    .danger {
-      background: #dc2626;
-      border-color: #dc2626;
-    }
-
-    .secondary {
-      background: #475569;
-      border-color: #475569;
-    }
-
-    .summary {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 30px;
-      margin-bottom: 18px;
-    }
-
-    .summary small {
-      display: block;
-      margin-bottom: 6px;
-      color: #64748b;
-    }
-
-    #result {
-      font-size: 32px;
-    }
-
-    #status,
-    #instance {
-      font-size: 18px;
-    }
-
+    button:hover:not(:disabled) { background: #e2ff9d; }
+    button:disabled { cursor: wait; opacity: .5; }
+    .field + .field { margin-top: 19px; }
+    .quick-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 20px; }
+    .quick-actions button { display: flex; align-items: center; justify-content: center; gap: 8px; }
+    .danger { background: transparent; color: var(--red); border-color: #654139; }
+    .danger:hover:not(:disabled) { background: #372721; border-color: var(--red); }
+    .operation { margin-top: 24px; padding-top: 22px; border-top: 1px solid var(--line); }
+    .label-row { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+    .label-meta { color: var(--muted); font-size: 10px; letter-spacing: .6px; }
+    .input-action { display: grid; grid-template-columns: minmax(0, 1fr) 101px; gap: 10px; }
+    .post { background: var(--orange); color: #352213; }
+    .post:hover:not(:disabled) { background: #ffca9e; }
+    .method { font-weight: 750; font-size: 10px; letter-spacing: .5px; }
+    .cookie-note { display: flex; align-items: start; gap: 10px; color: var(--muted); font-size: 11px; line-height: 1.7; margin: 23px 0 0; }
+    .note-mark { flex: none; font-family: var(--mono); color: var(--lime); }
+    .monitor { min-width: 0; display: grid; gap: 18px; }
+    .summary { display: grid; grid-template-columns: 1.35fr 1fr 1fr; gap: 12px; }
+    .metric { min-width: 0; border: 1px solid var(--line); padding: 19px 18px; background: var(--panel); display: flex; flex-direction: column; justify-content: space-between; gap: 21px; }
+    .metric small { color: var(--muted); font-family: var(--mono); font-size: 10px; letter-spacing: 1px; text-transform: uppercase; }
+    .metric strong { display: block; font-family: var(--mono); font-weight: 500; overflow-wrap: anywhere; }
+    .result-metric { background: var(--lime); border-color: var(--lime); color: #1c2511; }
+    .result-metric small { color: #3b4d25; }
+    #result { font-size: clamp(34px, 3.4vw, 48px); line-height: 1.1; letter-spacing: -2px; }
+    #status, #instance { font-size: 15px; line-height: 1.5; }
+    #status.success { color: var(--lime); }
+    #status.error { color: var(--red); }
+    .response-grid { display: grid; grid-template-columns: 1fr 1fr; min-width: 0; }
+    .code-area { min-width: 0; }
+    .code-area + .code-area { border-left: 1px solid var(--line); }
+    .code-label { margin: 0; padding: 14px 18px; border-bottom: 1px solid var(--line); color: var(--muted); font-family: var(--mono); font-size: 10px; text-transform: uppercase; letter-spacing: 1px; }
     pre {
       margin: 0;
-      padding: 16px;
-      border-radius: 6px;
-      background: #0f172a;
-      color: #e2e8f0;
       white-space: pre-wrap;
       overflow-wrap: anywhere;
-      max-height: 350px;
       overflow: auto;
+      font-family: var(--mono);
+      font-size: 12px;
+      line-height: 1.9;
+      tab-size: 2;
+      scrollbar-width: thin;
+      scrollbar-color: #526245 var(--inset);
     }
+    #request, #response { padding: 20px 18px; min-height: 250px; max-height: 400px; background: var(--inset); }
+    #request { color: #b9c4b0; }
+    #response { color: var(--lime); }
+    .history-panel { margin-top: 18px; }
+    .history-heading { padding: 14px 20px; border-bottom: 1px solid var(--line); }
+    .history-title { display: flex; align-items: center; gap: 15px; }
+    .secondary { min-height: 34px; padding: 7px 11px; background: transparent; color: var(--muted); border-color: #46503d; font-size: 11px; }
+    .secondary:hover:not(:disabled) { background: #2b3326; color: var(--text); }
+    #history { max-height: 300px; min-height: 104px; padding: 20px; color: #b9c4b0; background: var(--inset); }
+    .footer { margin-top: 20px; color: var(--muted); font-size: 10px; letter-spacing: .7px; }
+    .footer code { color: var(--text); }
 
-    .success {
-      color: #15803d;
+    @media (max-width: 1050px) {
+      main { padding: 24px; }
+      .workbench { grid-template-columns: 300px minmax(0, 1fr); }
+      .summary { grid-template-columns: 1fr 1fr; }
+      .result-metric { grid-column: 1 / -1; flex-direction: row; align-items: center; }
+      .response-grid { grid-template-columns: 1fr; }
+      .code-area + .code-area { border-left: 0; border-top: 1px solid var(--line); }
+      #request { min-height: 115px; }
+      #response { min-height: 170px; }
     }
-
-    .error {
-      color: #dc2626;
+    @media (max-width: 720px) {
+      main { padding: 18px 14px; }
+      .version { font-size: 9px; letter-spacing: .5px; }
+      .intro { display: block; padding: 28px 0; }
+      h1 { letter-spacing: -2px; }
+      .intro p { margin-top: 17px; max-width: none; font-size: 13px; }
+      .workbench { grid-template-columns: minmax(0, 1fr); }
+      .summary { gap: 10px; }
+      .metric { padding: 16px; }
+      #status, #instance { font-size: 13px; }
+      .footer { align-items: start; flex-direction: column; gap: 8px; }
+      .history-title { gap: 10px; }
     }
-
-    @media (max-width: 600px) {
-      body {
-        padding: 12px;
-      }
-
-      section {
-        padding: 16px;
-      }
-
-      .row {
-        flex-wrap: wrap;
-      }
-
-      .field {
-        flex-basis: 100%;
-      }
+    @media (prefers-reduced-motion: reduce) {
+      button { transition: none; }
     }
   </style>
 </head>
-
 <body>
   <main>
-    <h1>WS01 Test Client</h1>
-    <p>Test the session stack, application RESULT and Gateway affinity.</p>
+    <header class="masthead">
+      <div class="brand">
+        <span class="brand-icon" aria-hidden="true"><span></span><span></span><span></span></span>
+        <span class="brand-name">WS01 / Workbench</span>
+      </div>
+      <span class="version">HTTP · STACK API</span>
+    </header>
 
-    <section>
-      <div class="row">
-        <div class="field">
-          <label for="target">Target</label>
-          <select id="target">
-            <option value="8080">Gateway01 — port 8080</option>
-            <option value="8082">Gateway02 - port 8082</option>
-          </select>
+    <div class="intro">
+      <div>
+        <p class="eyebrow">Request / inspect / repeat</p>
+        <h1>Stack <span>console.</span></h1>
+      </div>
+      <p>A single workspace for testing RESULT, stack operations and Gateway routing.</p>
+    </div>
+
+    <div class="workbench">
+      <section class="panel" aria-labelledby="controls-title">
+        <div class="panel-heading">
+          <h2 id="controls-title">Request controls</h2>
+          <span class="section-number">01 / INPUT</span>
         </div>
-      </div>
+        <div class="controls-body">
+          <div class="field">
+            <label for="target">Destination</label>
+            <select id="target">
+              <option value="8080">Gateway01 — port 8080</option>
+              <option value="8082">Gateway02 — port 8082</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="address">Server address</label>
+            <input id="address" type="url" spellcheck="false" autocomplete="off">
+          </div>
+          <div class="quick-actions">
+            <button type="button" data-method="GET"><span class="method">GET</span> Read</button>
+            <button type="button" class="danger" data-method="DELETE"><span class="method">DELETE</span> Pop</button>
+          </div>
 
-      <div class="row">
-        <div class="field">
-          <label for="address">Server address</label>
-          <input id="address" type="url" spellcheck="false">
+          <div class="operation">
+            <div class="label-row">
+              <label for="resultInput">Application RESULT</label>
+              <span class="label-meta">JSON BODY</span>
+            </div>
+            <div class="input-action">
+              <input id="resultInput" type="number" value="0" step="1" min="-2147483648" max="2147483647">
+              <button type="button" class="post" data-method="POST">POST · Set</button>
+            </div>
+          </div>
+
+          <div class="operation">
+            <div class="label-row">
+              <label for="addInput">Push value / ADD</label>
+              <span class="label-meta">QUERY</span>
+            </div>
+            <div class="input-action">
+              <input id="addInput" type="number" value="5" step="1" min="-2147483648" max="2147483647">
+              <button type="button" data-method="PUT">PUT · Push</button>
+            </div>
+          </div>
+
+          <p class="cookie-note"><span class="note-mark" aria-hidden="true">[i]</span><span>Cookies travel automatically. Tabs in the same browser profile share their session.</span></p>
         </div>
-      </div>
+      </section>
 
-      <div class="row">
-        <button type="button" data-method="GET">
-          GET — Read RESULT
-        </button>
-
-        <button type="button" class="danger" data-method="DELETE">
-          DELETE — Pop
-        </button>
-      </div>
-
-      <div class="row">
-        <div class="field">
-          <label for="resultInput">Application RESULT</label>
-          <input
-            id="resultInput"
-            type="number"
-            value="0"
-            step="1"
-            min="-2147483648"
-            max="2147483647"
-          >
+      <section class="monitor" aria-label="Request results" aria-live="polite" aria-atomic="false">
+        <div class="summary">
+          <div class="metric result-metric">
+            <small>Returned RESULT</small>
+            <strong id="result">—</strong>
+          </div>
+          <div class="metric">
+            <small>HTTP status</small>
+            <strong id="status">No requests</strong>
+          </div>
+          <div class="metric">
+            <small>Handled by / X-Instance</small>
+            <strong id="instance">—</strong>
+          </div>
         </div>
 
-        <button type="button" data-method="POST">
-          POST — Set RESULT
-        </button>
-      </div>
-
-      <div class="row">
-        <div class="field">
-          <label for="addInput">Value to push: ADD</label>
-          <input
-            id="addInput"
-            type="number"
-            value="5"
-            step="1"
-            min="-2147483648"
-            max="2147483647"
-          >
+        <div class="panel">
+          <div class="panel-heading">
+            <h2>Request inspector</h2>
+            <span class="section-number">02 / OUTPUT</span>
+          </div>
+          <div class="response-grid">
+            <div class="code-area">
+              <h3 class="code-label">Outgoing request</h3>
+              <pre id="request" tabindex="0" aria-label="Last request">No request sent.</pre>
+            </div>
+            <div class="code-area">
+              <h3 class="code-label">Response body</h3>
+              <pre id="response" tabindex="0" aria-label="Response body">No response received.</pre>
+            </div>
+          </div>
         </div>
+      </section>
+    </div>
 
-        <button type="button" data-method="PUT">
-          PUT — Push
-        </button>
+    <section class="panel history-panel" aria-labelledby="history-title">
+      <div class="history-heading">
+        <div class="history-title">
+          <span class="section-number">03</span>
+          <h2 id="history-title">Request history</h2>
+        </div>
+        <button type="button" id="clearHistory" class="secondary">Clear history ↗</button>
       </div>
-
-      <p>
-        Cookies are sent automatically. Tabs in the same browser profile
-        share their session.
-      </p>
+      <pre id="history" tabindex="0" aria-label="Request history">No requests yet.</pre>
     </section>
 
-    <section aria-live="polite">
-      <div class="summary">
-        <div>
-          <small>Returned RESULT</small>
-          <strong id="result">—</strong>
-        </div>
-
-        <div>
-          <small>HTTP status</small>
-          <strong id="status">No requests</strong>
-        </div>
-
-        <div>
-          <small>Handled by: X-Instance</small>
-          <strong id="instance">—</strong>
-        </div>
-      </div>
-
-      <h2>Last request</h2>
-      <pre id="request">No request sent.</pre>
-
-      <h2>Response body</h2>
-      <pre id="response">No response received.</pre>
-    </section>
-
-    <section>
-      <div class="row">
-        <div class="field">
-          <h2>Request history</h2>
-        </div>
-
-        <button type="button" id="clearHistory" class="secondary">
-          Clear history
-        </button>
-      </div>
-
-      <pre id="history">No requests yet.</pre>
-    </section>
+    <footer class="footer">
+      <span>WS01 · WEB SERVICES TEST CLIENT</span>
+      <span>RESOURCE <code>/stack</code></span>
+    </footer>
   </main>
-
   <script>
-    const target = document.getElementById("target");
+const target = document.getElementById("target");
     const address = document.getElementById("address");
     const resultInput = document.getElementById("resultInput");
     const addInput = document.getElementById("addInput");
-
     const resultOutput = document.getElementById("result");
     const statusOutput = document.getElementById("status");
     const instanceOutput = document.getElementById("instance");
     const requestOutput = document.getElementById("request");
     const responseOutput = document.getElementById("response");
     const historyOutput = document.getElementById("history");
-
     const buttons = document.querySelectorAll("[data-method]");
     const history = [];
-
     const host = location.hostname === "127.0.0.1"
       ? "127.0.0.1"
       : "localhost";
-
     function updateAddress() {
       address.value = `http://${host}:${target.value}`;
     }
-
     function readInteger(input) {
       const raw = input.value.trim();
       const value = Number(raw);
-
       if (
         raw === "" ||
         !Number.isInteger(value) ||
@@ -324,84 +342,64 @@
       ) {
         throw new Error("Enter a valid 32-bit integer.");
       }
-
       return value;
     }
-
     function appendHistory(message) {
       history.unshift(
         `[${new Date().toLocaleTimeString()}] ${message}`
       );
-
       history.length = Math.min(history.length, 50);
       historyOutput.textContent = history.join("\n\n");
     }
-
     async function sendRequest(method) {
       buttons.forEach(button => button.disabled = true);
-
       statusOutput.textContent = "Sending...";
       statusOutput.className = "";
       resultOutput.textContent = "—";
       instanceOutput.textContent = "—";
       requestOutput.textContent = "Preparing request...";
       responseOutput.textContent = "Waiting for response...";
-
       try {
         const base = new URL(address.value.trim());
-
         if (!["http:", "https:"].includes(base.protocol)) {
           throw new Error("Use an HTTP or HTTPS server address.");
         }
-
         const url = new URL("/stack", base);
-
         const options = {
           method,
           credentials: "include",
           cache: "no-store",
           signal: AbortSignal.timeout(15000)
         };
-
         if (method === "POST") {
           options.headers = {
             "Content-Type": "application/json"
           };
-
           options.body = JSON.stringify({
             RESULT: readInteger(resultInput)
           });
         }
-
         if (method === "PUT") {
           url.searchParams.set("ADD", readInteger(addInput));
         }
-
         requestOutput.textContent =
           `${method} ${url.href}` +
           (options.body ? `\n\n${options.body}` : "");
-
         const started = performance.now();
         const response = await fetch(url, options);
         const text = await response.text();
         const elapsed = Math.round(performance.now() - started);
-
         let data = null;
-
         try {
           data = JSON.parse(text);
         } catch {
           data = null;
         }
-
         const instance = response.headers.get("X-Instance") ?? "—";
-
         statusOutput.textContent =
           `${response.status} ${response.statusText}`.trim();
-
         statusOutput.className = response.ok ? "success" : "error";
         instanceOutput.textContent = instance;
-
         if (
           response.ok &&
           data !== null &&
@@ -409,12 +407,10 @@
         ) {
           resultOutput.textContent = data.RESULT;
         }
-
         responseOutput.textContent = data !== null
           ? JSON.stringify(data, null, 2)
           : text || "(empty response)";
-
-        appendHistory(
+appendHistory(
           `${method} ${url.href}\n` +
           `HTTP ${response.status} | ${elapsed} ms | ` +
           `Instance: ${instance}\n` +
@@ -423,33 +419,27 @@
       } catch (error) {
         statusOutput.textContent = "Request failed";
         statusOutput.className = "error";
-
         responseOutput.textContent =
           `${error.message}\n\n` +
           "Check the server address, running containers and CORS. " +
           "Use the same hostname for this page and the API: " +
           "localhost with localhost, or 127.0.0.1 with 127.0.0.1.";
-
-        appendHistory(`${method} failed: ${error.message}`);
+appendHistory(`${method} failed: ${error.message}`);
       } finally {
         buttons.forEach(button => button.disabled = false);
       }
     }
-
     target.addEventListener("change", updateAddress);
-
     buttons.forEach(button => {
-      button.addEventListener("click", () => {
-        sendRequest(button.dataset.method);
+button.addEventListener("click", () => {
+sendRequest(button.dataset.method);
       });
     });
-
     document.getElementById("clearHistory").addEventListener("click", () => {
       history.length = 0;
       historyOutput.textContent = "No requests yet.";
     });
-
-    updateAddress();
+updateAddress();
   </script>
 </body>
 </html>
