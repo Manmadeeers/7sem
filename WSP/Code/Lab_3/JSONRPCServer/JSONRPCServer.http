@@ -1,0 +1,6 @@
+@JSONRPCServer_HostAddress = http://localhost:5270
+
+GET {{JSONRPCServer_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
