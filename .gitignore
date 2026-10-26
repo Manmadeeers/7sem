@@ -252,6 +252,7 @@ pyvenv.cfg
 [Oo]bj/
 artifacts/
 nuget-local/
+WSP/**/publish/
 
 #MAP specific
 MAP/**/android
