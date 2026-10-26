@@ -1,0 +1,14 @@
+{
+  "name": "grpcserver02",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Node.js gRPC calculator server",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "@grpc/grpc-js": "1.14.6",
+    "@grpc/proto-loader": "0.8.1"
+  }
+}
