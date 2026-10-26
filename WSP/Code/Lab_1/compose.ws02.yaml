@@ -1,0 +1,46 @@
+name: ws02-lab
+
+services:
+  ws02-1:
+    image: ws01-02:lab
+    build:
+      context: .
+      dockerfile: WS01-02/Dockerfile
+    environment:
+      ASPNETCORE_URLS: http://+:8080
+      INSTANCE_NAME: ws02-1
+      DataProtection__KeyPath: /app/keys
+    ports:
+      - "127.0.0.1:5101:8080"
+    volumes:
+      - ws02-keys:/app/keys
+
+  ws02-2:
+    image: ws01-02:lab
+    build:
+      context: .
+      dockerfile: WS01-02/Dockerfile
+    environment:
+      ASPNETCORE_URLS: http://+:8080
+      INSTANCE_NAME: ws02-2
+      DataProtection__KeyPath: /app/keys
+    ports:
+      - "127.0.0.1:5102:8080"
+    volumes:
+      - ws02-keys:/app/keys
+
+  gateway02:
+    image: ws02-gateway:lab
+    build:
+      context: .
+      dockerfile: Gateway02/Dockerfile
+    environment:
+      ASPNETCORE_URLS: http://+:8080
+    ports:
+      - "127.0.0.1:8082:8080"
+    depends_on:
+      - ws02-1
+      - ws02-2
+
+volumes:
+  ws02-keys:

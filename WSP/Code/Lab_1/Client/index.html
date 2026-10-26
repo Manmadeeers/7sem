@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>WS01 Test Client</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 24px;
+      font-family: system-ui, sans-serif;
+      color: #1e293b;
+      background: #f1f5f9;
+    }
+
+    main {
+      max-width: 850px;
+      margin: auto;
+    }
+
+    h1 {
+      margin-bottom: 6px;
+    }
+
+    p {
+      color: #64748b;
+      line-height: 1.5;
+    }
+
+    section {
+      margin-top: 20px;
+      padding: 24px;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      background: white;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 600;
+    }
+
+    input,
+    select,
+    button {
+      padding: 11px 12px;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      font: inherit;
+    }
+
+    input,
+    select {
+      width: 100%;
+      background: white;
+    }
+
+    input:focus,
+    select:focus,
+    button:focus-visible {
+      outline: 2px solid #2563eb;
+      outline-offset: 2px;
+    }
+
+    button {
+      cursor: pointer;
+      color: white;
+      background: #2563eb;
+      border-color: #2563eb;
+      font-weight: 600;
+    }
+
+    button:hover {
+      opacity: 0.9;
+    }
+
+    button:disabled {
+      cursor: wait;
+      opacity: 0.5;
+    }
+
+    .row {
+      display: flex;
+      gap: 12px;
+      align-items: end;
+      margin-bottom: 18px;
+    }
+
+    .field {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .row button {
+      flex-shrink: 0;
+    }
+
+    .danger {
+      background: #dc2626;
+      border-color: #dc2626;
+    }
+
+    .secondary {
+      background: #475569;
+      border-color: #475569;
+    }
+
+    .summary {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 30px;
+      margin-bottom: 18px;
+    }
+
+    .summary small {
+      display: block;
+      margin-bottom: 6px;
+      color: #64748b;
+    }
+
+    #result {
+      font-size: 32px;
+    }
+
+    #status,
+    #instance {
+      font-size: 18px;
+    }
+
+    pre {
+      margin: 0;
+      padding: 16px;
+      border-radius: 6px;
+      background: #0f172a;
+      color: #e2e8f0;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+      max-height: 350px;
+      overflow: auto;
+    }
+
+    .success {
+      color: #15803d;
+    }
+
+    .error {
+      color: #dc2626;
+    }
+
+    @media (max-width: 600px) {
+      body {
+        padding: 12px;
+      }
+
+      section {
+        padding: 16px;
+      }
+
+      .row {
+        flex-wrap: wrap;
+      }
+
+      .field {
+        flex-basis: 100%;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <main>
+    <h1>WS01 Test Client</h1>
+    <p>Test the session stack, application RESULT and Gateway affinity.</p>
+
+    <section>
+      <div class="row">
+        <div class="field">
+          <label for="target">Target</label>
+          <select id="target">
+            <option value="8080">Gateway01 — port 8080</option>
+            <option value="8082">Gateway02 - port 8082</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="field">
+          <label for="address">Server address</label>
+          <input id="address" type="url" spellcheck="false">
+        </div>
+      </div>
+
+      <div class="row">
+        <button type="button" data-method="GET">
+          GET — Read RESULT
+        </button>
+
+        <button type="button" class="danger" data-method="DELETE">
+          DELETE — Pop
+        </button>
+      </div>
+
+      <div class="row">
+        <div class="field">
+          <label for="resultInput">Application RESULT</label>
+          <input
+            id="resultInput"
+            type="number"
+            value="0"
+            step="1"
+            min="-2147483648"
+            max="2147483647"
+          >
+        </div>
+
+        <button type="button" data-method="POST">
+          POST — Set RESULT
+        </button>
+      </div>
+
+      <div class="row">
+        <div class="field">
+          <label for="addInput">Value to push: ADD</label>
+          <input
+            id="addInput"
+            type="number"
+            value="5"
+            step="1"
+            min="-2147483648"
+            max="2147483647"
+          >
+        </div>
+
+        <button type="button" data-method="PUT">
+          PUT — Push
+        </button>
+      </div>
+
+      <p>
+        Cookies are sent automatically. Tabs in the same browser profile
+        share their session.
+      </p>
+    </section>
+
+    <section aria-live="polite">
+      <div class="summary">
+        <div>
+          <small>Returned RESULT</small>
+          <strong id="result">—</strong>
+        </div>
+
+        <div>
+          <small>HTTP status</small>
+          <strong id="status">No requests</strong>
+        </div>
+
+        <div>
+          <small>Handled by: X-Instance</small>
+          <strong id="instance">—</strong>
+        </div>
+      </div>
+
+      <h2>Last request</h2>
+      <pre id="request">No request sent.</pre>
+
+      <h2>Response body</h2>
+      <pre id="response">No response received.</pre>
+    </section>
+
+    <section>
+      <div class="row">
+        <div class="field">
+          <h2>Request history</h2>
+        </div>
+
+        <button type="button" id="clearHistory" class="secondary">
+          Clear history
+        </button>
+      </div>
+
+      <pre id="history">No requests yet.</pre>
+    </section>
+  </main>
+
+  <script>
+    const target = document.getElementById("target");
+    const address = document.getElementById("address");
+    const resultInput = document.getElementById("resultInput");
+    const addInput = document.getElementById("addInput");
+
+    const resultOutput = document.getElementById("result");
+    const statusOutput = document.getElementById("status");
+    const instanceOutput = document.getElementById("instance");
+    const requestOutput = document.getElementById("request");
+    const responseOutput = document.getElementById("response");
+    const historyOutput = document.getElementById("history");
+
+    const buttons = document.querySelectorAll("[data-method]");
+    const history = [];
+
+    const host = location.hostname === "127.0.0.1"
+      ? "127.0.0.1"
+      : "localhost";
+
+    function updateAddress() {
+      address.value = `http://${host}:${target.value}`;
+    }
+
+    function readInteger(input) {
+      const raw = input.value.trim();
+      const value = Number(raw);
+
+      if (
+        raw === "" ||
+        !Number.isInteger(value) ||
+        value < -2147483648 ||
+        value > 2147483647
+      ) {
+        throw new Error("Enter a valid 32-bit integer.");
+      }
+
+      return value;
+    }
+
+    function appendHistory(message) {
+      history.unshift(
+        `[${new Date().toLocaleTimeString()}] ${message}`
+      );
+
+      history.length = Math.min(history.length, 50);
+      historyOutput.textContent = history.join("\n\n");
+    }
+
+    async function sendRequest(method) {
+      buttons.forEach(button => button.disabled = true);
+
+      statusOutput.textContent = "Sending...";
+      statusOutput.className = "";
+      resultOutput.textContent = "—";
+      instanceOutput.textContent = "—";
+      requestOutput.textContent = "Preparing request...";
+      responseOutput.textContent = "Waiting for response...";
+
+      try {
+        const base = new URL(address.value.trim());
+
+        if (!["http:", "https:"].includes(base.protocol)) {
+          throw new Error("Use an HTTP or HTTPS server address.");
+        }
+
+        const url = new URL("/stack", base);
+
+        const options = {
+          method,
+          credentials: "include",
+          cache: "no-store",
+          signal: AbortSignal.timeout(15000)
+        };
+
+        if (method === "POST") {
+          options.headers = {
+            "Content-Type": "application/json"
+          };
+
+          options.body = JSON.stringify({
+            RESULT: readInteger(resultInput)
+          });
+        }
+
+        if (method === "PUT") {
+          url.searchParams.set("ADD", readInteger(addInput));
+        }
+
+        requestOutput.textContent =
+          `${method} ${url.href}` +
+          (options.body ? `\n\n${options.body}` : "");
+
+        const started = performance.now();
+        const response = await fetch(url, options);
+        const text = await response.text();
+        const elapsed = Math.round(performance.now() - started);
+
+        let data = null;
+
+        try {
+          data = JSON.parse(text);
+        } catch {
+          data = null;
+        }
+
+        const instance = response.headers.get("X-Instance") ?? "—";
+
+        statusOutput.textContent =
+          `${response.status} ${response.statusText}`.trim();
+
+        statusOutput.className = response.ok ? "success" : "error";
+        instanceOutput.textContent = instance;
+
+        if (
+          response.ok &&
+          data !== null &&
+          typeof data.RESULT === "number"
+        ) {
+          resultOutput.textContent = data.RESULT;
+        }
+
+        responseOutput.textContent = data !== null
+          ? JSON.stringify(data, null, 2)
+          : text || "(empty response)";
+
+        appendHistory(
+          `${method} ${url.href}\n` +
+          `HTTP ${response.status} | ${elapsed} ms | ` +
+          `Instance: ${instance}\n` +
+          responseOutput.textContent
+        );
+      } catch (error) {
+        statusOutput.textContent = "Request failed";
+        statusOutput.className = "error";
+
+        responseOutput.textContent =
+          `${error.message}\n\n` +
+          "Check the server address, running containers and CORS. " +
+          "Use the same hostname for this page and the API: " +
+          "localhost with localhost, or 127.0.0.1 with 127.0.0.1.";
+
+        appendHistory(`${method} failed: ${error.message}`);
+      } finally {
+        buttons.forEach(button => button.disabled = false);
+      }
+    }
+
+    target.addEventListener("change", updateAddress);
+
+    buttons.forEach(button => {
+      button.addEventListener("click", () => {
+        sendRequest(button.dataset.method);
+      });
+    });
+
+    document.getElementById("clearHistory").addEventListener("click", () => {
+      history.length = 0;
+      historyOutput.textContent = "No requests yet.";
+    });
+
+    updateAddress();
+  </script>
+</body>
+</html>

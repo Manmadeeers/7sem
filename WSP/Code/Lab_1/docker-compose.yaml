@@ -1,0 +1,35 @@
+services:
+  ws01-1:
+    image: ws01-01:lab
+    build:
+      context: .
+      dockerfile: WS01-01/Dockerfile
+    environment:
+      ASPNETCORE_URLS: http://+:8080
+      INSTANCE_NAME: ws01-1
+    ports:
+      - "127.0.0.1:5001:8080"
+
+  ws01-2:
+    image: ws01-01:lab
+    build:
+      context: .
+      dockerfile: WS01-01/Dockerfile
+    environment:
+      ASPNETCORE_URLS: http://+:8080
+      INSTANCE_NAME: ws01-2
+    ports:
+      - "127.0.0.1:5002:8080"
+
+  gateway:
+    image: ws01-gateway:lab
+    build:
+      context: .
+      dockerfile: Gateway/Dockerfile
+    environment:
+      ASPNETCORE_URLS: http://+:8080
+    ports:
+      - "127.0.0.1:8080:8080"
+    depends_on:
+      - ws01-1
+      - ws01-2
