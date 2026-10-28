@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-
+import 'platform_demo_screen.dart';
+import '../models/product.dart';
 import '../theme.dart';
 import '../widgets/shared.dart';
 import 'detail_screen.dart';
@@ -9,10 +10,10 @@ class CatalogScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    void openDetails() {
-      Navigator.of(
-        context,
-      ).push(MaterialPageRoute<void>(builder: (_) => const DetailScreen()));
+    void openDetails(Product product) {
+      Navigator.of(context).push<void>(
+        MaterialPageRoute<void>(builder: (_) => DetailScreen(product: product)),
+      );
     }
 
     return Scaffold(
@@ -27,7 +28,7 @@ class CatalogScreen extends StatelessWidget {
               leading: HeaderIcon(icon: Icons.grid_view_rounded),
               trailing: HeaderIcon(icon: Icons.search_rounded),
             ),
-            _PromoBanner(onTap: openDetails),
+            _PromoBanner(onTap: () => openDetails(catalogProducts[1])),
             const SizedBox(height: 15),
             const PageDots(),
             const SizedBox(height: 22),
@@ -62,23 +63,12 @@ class CatalogScreen extends StatelessWidget {
                     mainAxisExtent: cardWidth * .95 + 72,
                   ),
                   children: [
-                    const _ProductCard(
-                      name: 'Nike Shoe',
-                      image: 'teal_sneakers',
-                    ),
-                    _ProductCard(
-                      key: const ValueKey('lebron-card'),
-                      name: 'Sneakers ft',
-                      image: 'grey_sneakers',
-                      favorite: true,
-                      onTap: openDetails,
-                    ),
-                    const _ProductCard(name: 'Classic Boots', image: 'boots'),
-                    const _ProductCard(
-                      name: 'Black Sneakers',
-                      image: 'teal_sneakers',
-                      dark: true,
-                    ),
+                    for (final product in catalogProducts)
+                      _ProductCard(
+                        key: ValueKey('product-${product.id}'),
+                        product: product,
+                        onTap: () => openDetails(product),
+                      ),
                   ],
                 );
               },
@@ -276,23 +266,15 @@ class _Categories extends StatelessWidget {
 }
 
 class _ProductCard extends StatelessWidget {
-  const _ProductCard({
-    super.key,
-    required this.name,
-    required this.image,
-    this.favorite = false,
-    this.dark = false,
-    this.onTap,
-  });
+  const _ProductCard({super.key, required this.product, required this.onTap});
 
-  final String name;
-  final String image;
-  final bool favorite;
-  final bool dark;
-  final VoidCallback? onTap;
+  final Product product;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
+    final cardName = product.id == 'lebron' ? 'Sneakers ft' : product.name;
+
     return Material(
       color: ShopColors.card,
       borderRadius: BorderRadius.circular(16),
@@ -307,14 +289,17 @@ class _ProductCard extends StatelessWidget {
                   Positioned.fill(
                     child: Padding(
                       padding: const EdgeInsets.fromLTRB(8, 20, 8, 0),
-                      child: ShoeImage(image: image, dark: dark),
+                      child: ShoeImage(
+                        image: product.image,
+                        dark: product.dark,
+                      ),
                     ),
                   ),
                   Positioned(
                     top: 11,
                     right: 11,
                     child: Icon(
-                      favorite ? Icons.favorite : Icons.favorite_border,
+                      product.favorite ? Icons.favorite : Icons.favorite_border,
                       size: 21,
                     ),
                   ),
@@ -327,7 +312,7 @@ class _ProductCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    name,
+                    cardName,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
@@ -336,17 +321,17 @@ class _ProductCard extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 5),
-                  const Row(
+                  Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        '85\$',
-                        style: TextStyle(
+                        product.formattedPrice,
+                        style: const TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.w700,
                         ),
                       ),
-                      Rating(small: true),
+                      const Rating(small: true),
                     ],
                   ),
                 ],
@@ -361,6 +346,14 @@ class _ProductCard extends StatelessWidget {
 
 class _BottomBar extends StatelessWidget {
   const _BottomBar();
+
+  void _openPlatformDemo(BuildContext context) {
+    Navigator.of(context).push<void>(
+      MaterialPageRoute<void>(
+        builder: (_) => const PlatformDemoScreen(),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -381,51 +374,59 @@ class _BottomBar extends StatelessWidget {
         children: List.generate(
           icons.length,
           (index) => Expanded(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                SizedBox(
-                  width: 35,
-                  height: 29,
-                  child: Stack(
-                    alignment: Alignment.center,
-                    children: [
-                      Icon(
-                        icons[index],
-                        size: 25,
-                        color: index == 0
-                            ? Colors.white
-                            : const Color(0xFF8996A4),
-                      ),
-                      if (index == 2)
-                        const Positioned(
-                          right: 0,
-                          top: 0,
-                          child: CircleAvatar(
-                            radius: 6,
-                            backgroundColor: ShopColors.blue,
-                            child: Text(
-                              '0',
-                              style: TextStyle(
-                                fontSize: 8,
-                                color: Colors.white,
+            child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: index == 3
+                  ? () => _openPlatformDemo(context)
+                  : null,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  SizedBox(
+                    width: 35,
+                    height: 29,
+                    child: Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        Icon(
+                          icons[index],
+                          size: 25,
+                          color: index == 0
+                              ? Colors.white
+                              : const Color(0xFF8996A4),
+                        ),
+                        if (index == 2)
+                          const Positioned(
+                            right: 0,
+                            top: 0,
+                            child: CircleAvatar(
+                              radius: 6,
+                              backgroundColor: ShopColors.blue,
+                              child: Text(
+                                '0',
+                                style: TextStyle(
+                                  fontSize: 8,
+                                  color: Colors.white,
+                                ),
                               ),
                             ),
                           ),
-                        ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
-                const SizedBox(height: 4),
-                Container(
-                  width: 4,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: index == 0 ? ShopColors.blue : Colors.transparent,
+                  const SizedBox(height: 4),
+                  Container(
+                    width: 4,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: index == 0
+                          ? ShopColors.blue
+                          : Colors.transparent,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),
