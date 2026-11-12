@@ -1,0 +1,23 @@
+Cases: 12
+
+space
+raw_success: 6/6
+html_source_success: 6/6
+html_text_success: 6/6
+pdf_success: 0/6
+whitespace_normalization_success: 0/6
+cf_stripping_success: 6/6
+simple_detector_flag: 6/6
+mean_visual_difference_ppm: 91555.197
+mean_capacity_per_1000_chars: 150.61
+
+zero_width
+raw_success: 6/6
+html_source_success: 6/6
+html_text_success: 6/6
+pdf_success: 4/6
+whitespace_normalization_success: 6/6
+cf_stripping_success: 0/6
+simple_detector_flag: 6/6
+mean_visual_difference_ppm: 0.000
+mean_capacity_per_1000_chars: 1000.00
