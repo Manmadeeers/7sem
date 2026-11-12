@@ -1,5 +1,3 @@
-import 'dart:typed_data';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -126,10 +124,7 @@ class _PlatformDemoScreenState extends State<PlatformDemoScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(
-            title,
-            style: Theme.of(context).textTheme.titleLarge,
-          ),
+          Text(title, style: Theme.of(context).textTheme.titleLarge),
           const SizedBox(height: 16),
           ...children,
         ],
@@ -143,9 +138,7 @@ class _PlatformDemoScreenState extends State<PlatformDemoScreen> {
     final mobileAvailable = PlatformService.isMobile;
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Platform Method Channel'),
-      ),
+      appBar: AppBar(title: const Text('Platform Method Channel')),
       body: ListView(
         padding: const EdgeInsets.all(22),
         children: [
@@ -156,148 +149,118 @@ class _PlatformDemoScreenState extends State<PlatformDemoScreen> {
           if (_status != null) ...[
             Text(
               _status!,
-              style: const TextStyle(
-                color: ShopColors.muted,
-                height: 1.5,
-              ),
+              style: const TextStyle(color: ShopColors.muted, height: 1.5),
             ),
             const SizedBox(height: 18),
           ],
-          _section(
-            'IP address',
-            [
-              SelectableText(
-                _ipAddress ?? 'Not requested',
-                style: const TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-              const SizedBox(height: 12),
-              const Text(
-                'Address on the active network. Android implementation.',
-                style: TextStyle(color: ShopColors.muted),
-              ),
-              const SizedBox(height: 16),
-              FilledButton(
-                onPressed: _busy || !androidAvailable
-                    ? null
-                    : _loadIpAddress,
-                child: const Text('Get IP address'),
-              ),
-            ],
-          ),
-          _section(
-            'Battery',
-            [
-              Text(
-                _batteryLevel == null
-                    ? 'Not requested'
-                    : 'Battery level: $_batteryLevel%',
-                style: const TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-              const SizedBox(height: 16),
-              FilledButton(
-                onPressed: _busy || !mobileAvailable
-                    ? null
-                    : _loadBatteryLevel,
-                child: const Text('Get battery level'),
-              ),
-            ],
-          ),
-          _section(
-            'Compose a message',
-            [
-              Form(
-                key: _messageFormKey,
-                child: Column(
-                  children: [
-                    TextFormField(
-                      controller: _phoneController,
-                      keyboardType: TextInputType.phone,
-                      decoration: const InputDecoration(
-                        labelText: 'Phone number',
-                        hintText: 'Enter a phone number',
-                        border: OutlineInputBorder(),
-                      ),
-                      validator: (value) {
-                        if (value == null || value.trim().isEmpty) {
-                          return 'Enter a phone number.';
-                        }
-
-                        return null;
-                      },
+          _section('IP address', [
+            SelectableText(
+              _ipAddress ?? 'Not requested',
+              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
+            ),
+            const SizedBox(height: 12),
+            const Text(
+              'Address on the active network. Android implementation.',
+              style: TextStyle(color: ShopColors.muted),
+            ),
+            const SizedBox(height: 16),
+            FilledButton(
+              onPressed: _busy || !androidAvailable ? null : _loadIpAddress,
+              child: const Text('Get IP address'),
+            ),
+          ]),
+          _section('Battery', [
+            Text(
+              _batteryLevel == null
+                  ? 'Not requested'
+                  : 'Battery level: $_batteryLevel%',
+              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
+            ),
+            const SizedBox(height: 16),
+            FilledButton(
+              onPressed: _busy || !mobileAvailable ? null : _loadBatteryLevel,
+              child: const Text('Get battery level'),
+            ),
+          ]),
+          _section('Compose a message', [
+            Form(
+              key: _messageFormKey,
+              child: Column(
+                children: [
+                  TextFormField(
+                    controller: _phoneController,
+                    keyboardType: TextInputType.phone,
+                    decoration: const InputDecoration(
+                      labelText: 'Phone number',
+                      hintText: 'Enter a phone number',
+                      border: OutlineInputBorder(),
                     ),
-                    const SizedBox(height: 16),
-                    TextFormField(
-                      controller: _messageController,
-                      keyboardType: TextInputType.multiline,
-                      minLines: 3,
-                      maxLines: 6,
-                      decoration: const InputDecoration(
-                        labelText: 'Message',
-                        border: OutlineInputBorder(),
-                      ),
-                      validator: (value) {
-                        if (value == null || value.trim().isEmpty) {
-                          return 'Enter a message.';
-                        }
+                    validator: (value) {
+                      if (value == null || value.trim().isEmpty) {
+                        return 'Enter a phone number.';
+                      }
 
-                        return null;
-                      },
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 16),
-              FilledButton(
-                onPressed: _busy || !androidAvailable
-                    ? null
-                    : _openMessage,
-                child: const Text('Open messaging app'),
-              ),
-              const SizedBox(height: 12),
-              const Text(
-                'Review and send the message in the messaging app. '
-                'This demonstration is implemented for Android.',
-                style: TextStyle(
-                  color: ShopColors.muted,
-                  height: 1.5,
-                ),
-              ),
-            ],
-          ),
-          _section(
-            'Camera',
-            [
-              if (_photo != null) ...[
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(12),
-                  child: Image.memory(
-                    _photo!,
-                    height: 240,
-                    width: double.infinity,
-                    fit: BoxFit.contain,
+                      return null;
+                    },
                   ),
-                ),
-                const SizedBox(height: 16),
-              ] else ...[
-                const Icon(
-                  Icons.camera_alt_outlined,
-                  size: 60,
-                  color: ShopColors.muted,
-                ),
-                const SizedBox(height: 16),
-              ],
-              FilledButton(
-                onPressed: _busy || !mobileAvailable ? null : _takePhoto,
-                child: const Text('Take photo'),
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: _messageController,
+                    keyboardType: TextInputType.multiline,
+                    minLines: 3,
+                    maxLines: 6,
+                    decoration: const InputDecoration(
+                      labelText: 'Message',
+                      border: OutlineInputBorder(),
+                    ),
+                    validator: (value) {
+                      if (value == null || value.trim().isEmpty) {
+                        return 'Enter a message.';
+                      }
+
+                      return null;
+                    },
+                  ),
+                ],
               ),
+            ),
+            const SizedBox(height: 16),
+            FilledButton(
+              onPressed: _busy || !androidAvailable ? null : _openMessage,
+              child: const Text('Open messaging app'),
+            ),
+            const SizedBox(height: 12),
+            const Text(
+              'Review and send the message in the messaging app. '
+              'This demonstration is implemented for Android.',
+              style: TextStyle(color: ShopColors.muted, height: 1.5),
+            ),
+          ]),
+          _section('Camera', [
+            if (_photo != null) ...[
+              ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: Image.memory(
+                  _photo!,
+                  height: 240,
+                  width: double.infinity,
+                  fit: BoxFit.contain,
+                ),
+              ),
+              const SizedBox(height: 16),
+            ] else ...[
+              const Icon(
+                Icons.camera_alt_outlined,
+                size: 60,
+                color: ShopColors.muted,
+              ),
+              const SizedBox(height: 16),
             ],
-          ),
+            FilledButton(
+              onPressed: _busy || !mobileAvailable ? null : _takePhoto,
+              child: const Text('Take photo'),
+            ),
+          ]),
         ],
       ),
     );

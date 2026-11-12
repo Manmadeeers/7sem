@@ -5,11 +5,7 @@ import '../theme.dart';
 import '../widgets/shared.dart';
 
 class SizeScreen extends StatefulWidget {
-  const SizeScreen({
-    super.key,
-    required this.product,
-    this.selectedSize,
-  });
+  const SizeScreen({super.key, required this.product, this.selectedSize});
 
   final Product product;
   final int? selectedSize;
@@ -46,16 +42,10 @@ class _SizeScreenState extends State<SizeScreen> {
         children: [
           SizedBox(
             height: 180,
-            child: ShoeImage(
-              image: product.image,
-              dark: product.dark,
-            ),
+            child: ShoeImage(image: product.image, dark: product.dark),
           ),
           const SizedBox(height: 20),
-          Text(
-            product.name,
-            style: Theme.of(context).textTheme.titleLarge,
-          ),
+          Text(product.name, style: Theme.of(context).textTheme.titleLarge),
           const SizedBox(height: 8),
           Text(product.formattedPrice),
           const SizedBox(height: 24),

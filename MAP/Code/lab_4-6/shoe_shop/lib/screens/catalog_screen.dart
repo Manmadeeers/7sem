@@ -1,15 +1,23 @@
 import 'package:flutter/material.dart';
-import 'platform_demo_screen.dart';
+
+import '../data/shop_scope.dart';
 import '../models/product.dart';
+import '../models/shop_user.dart';
 import '../theme.dart';
 import '../widgets/shared.dart';
 import 'detail_screen.dart';
+import 'favorites_screen.dart';
+import 'manage_products_screen.dart';
+import 'storage_screen.dart';
 
 class CatalogScreen extends StatelessWidget {
   const CatalogScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final store = ShopScope.of(context);
+    final products = store.products;
+
     void openDetails(Product product) {
       Navigator.of(context).push<void>(
         MaterialPageRoute<void>(builder: (_) => DetailScreen(product: product)),
@@ -18,17 +26,41 @@ class CatalogScreen extends StatelessWidget {
 
     return Scaffold(
       extendBody: true,
+      appBar: AppBar(
+        automaticallyImplyLeading: false,
+        leadingWidth: 64,
+        leading: const Padding(
+          padding: EdgeInsets.only(left: 22, top: 8, bottom: 8),
+          child: HeaderIcon(icon: Icons.grid_view_rounded),
+        ),
+        title: const Text('Explore'),
+        centerTitle: true,
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 22, top: 8, bottom: 8),
+            child: _UserMenu(
+              users: store.users,
+              selected: store.currentUser,
+              onSelected: store.selectUser,
+            ),
+          ),
+        ],
+      ),
       body: SafeArea(
+        top: false,
         bottom: false,
         child: ListView(
           padding: const EdgeInsets.fromLTRB(22, 0, 22, 100),
           children: [
-            const ShopHeader(
-              title: 'Explore',
-              leading: HeaderIcon(icon: Icons.grid_view_rounded),
-              trailing: HeaderIcon(icon: Icons.search_rounded),
-            ),
-            _PromoBanner(onTap: () => openDetails(catalogProducts[1])),
+            if (products.isNotEmpty)
+              _PromoBanner(
+                onTap: () => openDetails(
+                  products.firstWhere(
+                    (product) => product.id == 'lebron',
+                    orElse: () => products.first,
+                  ),
+                ),
+              ),
             const SizedBox(height: 15),
             const PageDots(),
             const SizedBox(height: 22),
@@ -63,11 +95,13 @@ class CatalogScreen extends StatelessWidget {
                     mainAxisExtent: cardWidth * .95 + 72,
                   ),
                   children: [
-                    for (final product in catalogProducts)
+                    for (final product in products)
                       _ProductCard(
                         key: ValueKey('product-${product.id}'),
                         product: product,
                         onTap: () => openDetails(product),
+                        favorite: store.isFavorite(product.id),
+                        onFavorite: () => store.toggleFavorite(product.id),
                       ),
                   ],
                 );
@@ -76,10 +110,67 @@ class CatalogScreen extends StatelessWidget {
           ],
         ),
       ),
-      bottomNavigationBar: const SafeArea(
+      bottomNavigationBar: SafeArea(
         top: false,
-        minimum: EdgeInsets.fromLTRB(22, 0, 22, 12),
-        child: _BottomBar(),
+        minimum: const EdgeInsets.fromLTRB(22, 0, 22, 12),
+        child: _BottomBar(currentUser: store.currentUser),
+      ),
+    );
+  }
+}
+
+class _UserMenu extends StatelessWidget {
+  const _UserMenu({
+    required this.users,
+    required this.selected,
+    required this.onSelected,
+  });
+
+  final List<ShopUser> users;
+  final ShopUser selected;
+  final ValueChanged<String> onSelected;
+
+  @override
+  Widget build(BuildContext context) {
+    return PopupMenuButton<String>(
+      key: const ValueKey('user-menu'),
+      tooltip: 'Switch user',
+      onSelected: onSelected,
+      itemBuilder: (context) => [
+        for (final user in users)
+          PopupMenuItem<String>(
+            value: user.id,
+            child: Row(
+              children: [
+                Icon(
+                  user.id == selected.id
+                      ? Icons.radio_button_checked
+                      : Icons.radio_button_off,
+                  size: 18,
+                ),
+                const SizedBox(width: 10),
+                Expanded(child: Text(user.name)),
+                Text(
+                  user.role.label,
+                  style: const TextStyle(fontSize: 11, color: ShopColors.muted),
+                ),
+              ],
+            ),
+          ),
+      ],
+      child: Container(
+        width: 42,
+        height: 42,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: const Color(0xFFECEEEF), width: 1.5),
+        ),
+        alignment: Alignment.center,
+        child: Text(
+          selected.name.substring(0, 1).toUpperCase(),
+          style: const TextStyle(fontWeight: FontWeight.w800),
+        ),
       ),
     );
   }
@@ -232,12 +323,17 @@ class _Categories extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 6),
-              const Text(
-                'Shoes',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
+              const Expanded(
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    'Shoes',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
                 ),
               ),
             ],
@@ -266,10 +362,18 @@ class _Categories extends StatelessWidget {
 }
 
 class _ProductCard extends StatelessWidget {
-  const _ProductCard({super.key, required this.product, required this.onTap});
+  const _ProductCard({
+    super.key,
+    required this.product,
+    required this.onTap,
+    required this.favorite,
+    required this.onFavorite,
+  });
 
   final Product product;
   final VoidCallback onTap;
+  final bool favorite;
+  final VoidCallback onFavorite;
 
   @override
   Widget build(BuildContext context) {
@@ -298,9 +402,18 @@ class _ProductCard extends StatelessWidget {
                   Positioned(
                     top: 11,
                     right: 11,
-                    child: Icon(
-                      product.favorite ? Icons.favorite : Icons.favorite_border,
-                      size: 21,
+                    child: IconButton(
+                      key: ValueKey('favorite-${product.id}'),
+                      tooltip: favorite
+                          ? 'Remove from favorites'
+                          : 'Add to favorites',
+                      visualDensity: VisualDensity.compact,
+                      onPressed: onFavorite,
+                      icon: Icon(
+                        favorite ? Icons.favorite : Icons.favorite_border,
+                        color: favorite ? ShopColors.orange : ShopColors.ink,
+                        size: 21,
+                      ),
                     ),
                   ),
                 ],
@@ -345,24 +458,24 @@ class _ProductCard extends StatelessWidget {
 }
 
 class _BottomBar extends StatelessWidget {
-  const _BottomBar();
+  const _BottomBar({required this.currentUser});
 
-  void _openPlatformDemo(BuildContext context) {
-    Navigator.of(context).push<void>(
-      MaterialPageRoute<void>(
-        builder: (_) => const PlatformDemoScreen(),
-      ),
-    );
-  }
+  final ShopUser currentUser;
 
   @override
   Widget build(BuildContext context) {
     const icons = [
       Icons.home_rounded,
-      Icons.shopping_bag_outlined,
-      Icons.shopping_cart_outlined,
-      Icons.person_outline_rounded,
+      Icons.favorite_outline_rounded,
+      Icons.inventory_2_outlined,
+      Icons.security_outlined,
     ];
+
+    void openPage(Widget page) {
+      Navigator.of(
+        context,
+      ).push<void>(MaterialPageRoute<void>(builder: (_) => page));
+    }
 
     return Container(
       height: 61,
@@ -376,9 +489,14 @@ class _BottomBar extends StatelessWidget {
           (index) => Expanded(
             child: GestureDetector(
               behavior: HitTestBehavior.opaque,
-              onTap: index == 3
-                  ? () => _openPlatformDemo(context)
-                  : null,
+              onTap: switch (index) {
+                1 => () => openPage(const FavoritesScreen()),
+                2 when currentUser.role.canManageProducts => () => openPage(
+                  const ManageProductsScreen(),
+                ),
+                3 => () => openPage(const StorageScreen()),
+                _ => null,
+              },
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -395,20 +513,14 @@ class _BottomBar extends StatelessWidget {
                               ? Colors.white
                               : const Color(0xFF8996A4),
                         ),
-                        if (index == 2)
+                        if (index == 2 && !currentUser.role.canManageProducts)
                           const Positioned(
                             right: 0,
                             top: 0,
-                            child: CircleAvatar(
-                              radius: 6,
-                              backgroundColor: ShopColors.blue,
-                              child: Text(
-                                '0',
-                                style: TextStyle(
-                                  fontSize: 8,
-                                  color: Colors.white,
-                                ),
-                              ),
+                            child: Icon(
+                              Icons.lock,
+                              size: 12,
+                              color: ShopColors.orange,
                             ),
                           ),
                       ],
@@ -420,9 +532,7 @@ class _BottomBar extends StatelessWidget {
                     height: 4,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: index == 0
-                          ? ShopColors.blue
-                          : Colors.transparent,
+                      color: index == 0 ? ShopColors.blue : Colors.transparent,
                     ),
                   ),
                 ],

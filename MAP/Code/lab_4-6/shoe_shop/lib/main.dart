@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import 'data/shop_scope.dart';
+import 'data/shop_store.dart';
 import 'models/product.dart';
 import 'screens/catalog_screen.dart';
 import 'screens/checkout_screen.dart';
@@ -12,47 +14,55 @@ Future<void> main() async {
   SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle.dark);
 
   await CameraService.recoverLostPhoto();
+  final store = await HiveShopStore.open();
 
-  runApp(const ShoeShopApp());
+  runApp(ShoeShopApp(store: store));
 }
 
 class ShoeShopApp extends StatelessWidget {
-  const ShoeShopApp({super.key});
+  const ShoeShopApp({super.key, this.store});
+
+  final ShopStore? store;
+
+  static final ShopStore _testStore = MemoryShopStore.seeded();
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Shoe Shop',
-      debugShowCheckedModeBanner: false,
-      theme: shopTheme,
-      builder: (context, child) => ColoredBox(
-        color: const Color(0xFFECEEEF),
-        child: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 430),
-            child: child!,
+    return ShopScope(
+      store: store ?? _testStore,
+      child: MaterialApp(
+        title: 'Shoe Shop',
+        debugShowCheckedModeBanner: false,
+        theme: shopTheme,
+        builder: (context, child) => ColoredBox(
+          color: const Color(0xFFECEEEF),
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 430),
+              child: child!,
+            ),
           ),
         ),
-      ),
-      home: const CatalogScreen(),
-      onGenerateRoute: (settings) {
-        if (settings.name == CheckoutScreen.routeName) {
-          final arguments = settings.arguments;
+        home: const CatalogScreen(),
+        onGenerateRoute: (settings) {
+          if (settings.name == CheckoutScreen.routeName) {
+            final arguments = settings.arguments;
 
-          if (arguments is! PurchaseSelection) {
-            throw FlutterError(
-              '${CheckoutScreen.routeName} requires PurchaseSelection.',
+            if (arguments is! PurchaseSelection) {
+              throw FlutterError(
+                '${CheckoutScreen.routeName} requires PurchaseSelection.',
+              );
+            }
+
+            return MaterialPageRoute<bool>(
+              settings: settings,
+              builder: (_) => CheckoutScreen(selection: arguments),
             );
           }
 
-          return MaterialPageRoute<bool>(
-            settings: settings,
-            builder: (_) => CheckoutScreen(selection: arguments),
-          );
-        }
-
-        return null;
-      },
+          return null;
+        },
+      ),
     );
   }
 }

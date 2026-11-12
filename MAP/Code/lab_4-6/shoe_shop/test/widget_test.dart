@@ -15,9 +15,7 @@ void main() {
     await tester.pumpAndSettle();
 
     for (final product in catalogProducts) {
-      final card = find.byKey(
-        ValueKey('product-${product.id}'),
-      );
+      final card = find.byKey(ValueKey('product-${product.id}'));
 
       await tester.ensureVisible(card);
       await tester.pumpAndSettle();
@@ -36,9 +34,7 @@ void main() {
       expect(price.data, product.formattedPrice);
       expect(tester.takeException(), isNull);
 
-      await tester.tap(
-        find.byKey(const ValueKey('detail-back')),
-      );
+      await tester.tap(find.byKey(const ValueKey('detail-back')));
       await tester.pumpAndSettle();
 
       expect(find.text('Explore'), findsOneWidget);
@@ -55,37 +51,26 @@ void main() {
     await tester.pumpWidget(const ShoeShopApp());
     await tester.pumpAndSettle();
 
-    await tester.tap(
-      find.byKey(const ValueKey('promo-details')),
-    );
+    await tester.tap(find.byKey(const ValueKey('promo-details')));
     await tester.pumpAndSettle();
 
-    final galleryFinder = find.byKey(
-      const ValueKey('product-pages'),
-    );
+    final galleryFinder = find.byKey(const ValueKey('product-pages'));
 
-    await tester.drag(
-      galleryFinder,
-      const Offset(-300, 0),
-    );
+    await tester.drag(galleryFinder, const Offset(-300, 0));
     await tester.pumpAndSettle();
 
     var gallery = tester.widget<PageView>(galleryFinder);
 
     expect(gallery.controller!.page, closeTo(1, .01));
 
-    await tester.tap(
-      find.byKey(const ValueKey('photo-thumbnail-2')),
-    );
+    await tester.tap(find.byKey(const ValueKey('photo-thumbnail-2')));
     await tester.pumpAndSettle();
 
     gallery = tester.widget<PageView>(galleryFinder);
 
     expect(gallery.controller!.page, closeTo(2, .01));
 
-    final sizeButton = find.byKey(
-      const ValueKey('detail-size-40'),
-    );
+    final sizeButton = find.byKey(const ValueKey('detail-size-40'));
 
     await tester.ensureVisible(sizeButton);
     await tester.pumpAndSettle();
@@ -95,9 +80,7 @@ void main() {
     expect(find.text('Choose size'), findsOneWidget);
     expect(find.text('Nike Lebron'), findsOneWidget);
 
-    await tester.tap(
-      find.byKey(const ValueKey('confirm-size')),
-    );
+    await tester.tap(find.byKey(const ValueKey('confirm-size')));
     await tester.pumpAndSettle();
 
     expect(find.text('Selected size: 40'), findsOneWidget);
@@ -105,22 +88,15 @@ void main() {
     await tester.pump(const Duration(seconds: 5));
     await tester.pumpAndSettle();
 
-    await tester.tap(
-      find.byKey(const ValueKey('buy-now')),
-    );
+    await tester.tap(find.byKey(const ValueKey('buy-now')));
     await tester.pumpAndSettle();
 
     expect(find.text('Checkout'), findsOneWidget);
     expect(find.text('Nike Lebron'), findsOneWidget);
     expect(find.text('40'), findsOneWidget);
-    expect(
-      find.text(catalogProducts[1].formattedPrice),
-      findsOneWidget,
-    );
+    expect(find.text(catalogProducts[1].formattedPrice), findsOneWidget);
 
-    await tester.tap(
-      find.byKey(const ValueKey('confirm-purchase')),
-    );
+    await tester.tap(find.byKey(const ValueKey('confirm-purchase')));
     await tester.pumpAndSettle();
 
     expect(

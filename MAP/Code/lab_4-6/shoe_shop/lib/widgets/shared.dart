@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 
-import '../theme.dart';
-
 class ShopHeader extends StatelessWidget {
   const ShopHeader({
     super.key,
@@ -74,7 +72,10 @@ class ShoeImage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    Widget photo = Image.asset('assets/images/$image.png', fit: BoxFit.contain);
+    final imagePath = image.startsWith('assets/')
+        ? image
+        : 'assets/images/$image.png';
+    Widget photo = Image.asset(imagePath, fit: BoxFit.contain);
     if (dark) {
       photo = ColorFiltered(
         colorFilter: const ColorFilter.mode(
@@ -148,9 +149,10 @@ class PageDots extends StatelessWidget {
 }
 
 class Rating extends StatelessWidget {
-  const Rating({super.key, this.small = false});
+  const Rating({super.key, this.small = false, this.reviewCount});
 
   final bool small;
+  final int? reviewCount;
 
   @override
   Widget build(BuildContext context) {
@@ -164,7 +166,7 @@ class Rating extends StatelessWidget {
         ),
         const SizedBox(width: 3),
         Text(
-          '4.8',
+          reviewCount == null ? '4.8' : '4.8 ($reviewCount)',
           style: TextStyle(
             fontSize: small ? 12 : 15,
             fontWeight: FontWeight.w700,

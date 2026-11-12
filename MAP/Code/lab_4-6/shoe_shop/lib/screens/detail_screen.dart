@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../data/shop_scope.dart';
 import '../models/product.dart';
 import '../theme.dart';
 import '../widgets/shared.dart';
@@ -7,10 +8,7 @@ import 'checkout_screen.dart';
 import 'size_screen.dart';
 
 class DetailScreen extends StatefulWidget {
-  const DetailScreen({
-    super.key,
-    required this.product,
-  });
+  const DetailScreen({super.key, required this.product});
 
   final Product product;
 
@@ -41,10 +39,8 @@ class _DetailScreenState extends State<DetailScreen> {
   Future<void> _chooseSize(int initialSize) async {
     final result = await Navigator.of(context).push<int>(
       MaterialPageRoute<int>(
-        builder: (_) => SizeScreen(
-          product: widget.product,
-          selectedSize: initialSize,
-        ),
+        builder: (_) =>
+            SizeScreen(product: widget.product, selectedSize: initialSize),
       ),
     );
 
@@ -56,11 +52,7 @@ class _DetailScreenState extends State<DetailScreen> {
 
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
-      ..showSnackBar(
-        SnackBar(
-          content: Text('Selected size: $result'),
-        ),
-      );
+      ..showSnackBar(SnackBar(content: Text('Selected size: $result')));
   }
 
   Future<void> _openCheckout() async {
@@ -69,10 +61,9 @@ class _DetailScreenState extends State<DetailScreen> {
       size: _selectedSize ?? widget.product.sizes.first,
     );
 
-    final confirmed = await Navigator.of(context).pushNamed<bool>(
-      CheckoutScreen.routeName,
-      arguments: selection,
-    );
+    final confirmed = await Navigator.of(
+      context,
+    ).pushNamed<bool>(CheckoutScreen.routeName, arguments: selection);
 
     if (!mounted || confirmed != true) {
       return;
@@ -93,6 +84,8 @@ class _DetailScreenState extends State<DetailScreen> {
   @override
   Widget build(BuildContext context) {
     final product = widget.product;
+    final store = ShopScope.of(context);
+    final isFavorite = store.isFavorite(product.id);
 
     return Scaffold(
       body: SafeArea(
@@ -108,9 +101,9 @@ class _DetailScreenState extends State<DetailScreen> {
                   onTap: () => Navigator.of(context).pop(),
                 ),
                 trailing: HeaderIcon(
-                  icon: product.favorite
-                      ? Icons.favorite
-                      : Icons.favorite_border,
+                  key: ValueKey('detail-favorite-${product.id}'),
+                  icon: isFavorite ? Icons.favorite : Icons.favorite_border,
+                  onTap: () => store.toggleFavorite(product.id),
                 ),
               ),
               Expanded(
@@ -127,21 +120,16 @@ class _DetailScreenState extends State<DetailScreen> {
                       onSelectPage: _showPhoto,
                     ),
                     const SizedBox(height: 12),
-                    _Thumbnails(
-                      product: product,
-                      onTap: _showPhoto,
-                    ),
+                    _Thumbnails(product: product, onTap: _showPhoto),
                     const SizedBox(height: 16),
                     Row(
-                      mainAxisAlignment:
-                          MainAxisAlignment.spaceBetween,
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
                           'Size',
-                          style:
-                              Theme.of(context).textTheme.titleLarge,
+                          style: Theme.of(context).textTheme.titleLarge,
                         ),
-                        const Rating(),
+                        Rating(reviewCount: product.reviewCount),
                       ],
                     ),
                     const SizedBox(height: 12),
@@ -152,28 +140,37 @@ class _DetailScreenState extends State<DetailScreen> {
                     ),
                     const SizedBox(height: 18),
                     Row(
-                      mainAxisAlignment:
-                          MainAxisAlignment.spaceBetween,
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Flexible(
                           child: Text(
                             product.name,
-                            key: const ValueKey(
-                              'detail-product-name',
-                            ),
-                            style: Theme.of(context)
-                                .textTheme
-                                .titleLarge,
+                            key: const ValueKey('detail-product-name'),
+                            style: Theme.of(context).textTheme.titleLarge,
                           ),
                         ),
                         const SizedBox(width: 12),
                         Text(
                           product.formattedPrice,
-                          key: const ValueKey(
-                            'detail-product-price',
+                          key: const ValueKey('detail-product-price'),
+                          style: Theme.of(context).textTheme.titleLarge,
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        const Icon(
+                          Icons.location_on_outlined,
+                          size: 18,
+                          color: ShopColors.muted,
+                        ),
+                        const SizedBox(width: 5),
+                        Expanded(
+                          child: Text(
+                            product.location,
+                            style: const TextStyle(color: ShopColors.muted),
                           ),
-                          style:
-                              Theme.of(context).textTheme.titleLarge,
                         ),
                       ],
                     ),
@@ -181,15 +178,10 @@ class _DetailScreenState extends State<DetailScreen> {
                     const Row(
                       children: [
                         Expanded(
-                          child: _DescriptionTab(
-                            'Description',
-                            selected: true,
-                          ),
+                          child: _DescriptionTab('Description', selected: true),
                         ),
                         SizedBox(width: 14),
-                        Expanded(
-                          child: _DescriptionTab('Reviews'),
-                        ),
+                        Expanded(child: _DescriptionTab('Reviews')),
                       ],
                     ),
                     const SizedBox(height: 16),
@@ -239,13 +231,7 @@ class _ProductPhoto extends StatelessWidget {
   final ValueChanged<int> onPageChanged;
   final ValueChanged<int> onSelectPage;
 
-  static const _angles = <double>[
-    0,
-    -.15,
-    .15,
-    -.3,
-    .3,
-  ];
+  static const _angles = <double>[0, -.15, .15, -.3, .3];
 
   @override
   Widget build(BuildContext context) {
@@ -328,10 +314,7 @@ class _PhotoDots extends StatelessWidget {
 }
 
 class _Thumbnails extends StatelessWidget {
-  const _Thumbnails({
-    required this.product,
-    required this.onTap,
-  });
+  const _Thumbnails({required this.product, required this.onTap});
 
   final Product product;
   final ValueChanged<int> onTap;
@@ -420,10 +403,7 @@ class _Sizes extends StatelessWidget {
 }
 
 class _DescriptionTab extends StatelessWidget {
-  const _DescriptionTab(
-    this.label, {
-    this.selected = false,
-  });
+  const _DescriptionTab(this.label, {this.selected = false});
 
   final String label;
   final bool selected;
@@ -466,10 +446,7 @@ class _PurchaseBar extends StatelessWidget {
               color: const Color(0xFFECEDEE),
               borderRadius: BorderRadius.circular(12),
             ),
-            child: const Icon(
-              Icons.add_shopping_cart_rounded,
-              size: 28,
-            ),
+            child: const Icon(Icons.add_shopping_cart_rounded, size: 28),
           ),
           const SizedBox(width: 12),
           Expanded(

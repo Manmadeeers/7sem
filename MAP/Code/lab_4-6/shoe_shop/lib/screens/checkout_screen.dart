@@ -5,10 +5,7 @@ import '../theme.dart';
 import '../widgets/shared.dart';
 
 class CheckoutScreen extends StatelessWidget {
-  const CheckoutScreen({
-    super.key,
-    required this.selection,
-  });
+  const CheckoutScreen({super.key, required this.selection});
 
   static const routeName = '/checkout';
 
@@ -25,23 +22,14 @@ class CheckoutScreen extends StatelessWidget {
         children: [
           SizedBox(
             height: 200,
-            child: ShoeImage(
-              image: product.image,
-              dark: product.dark,
-            ),
+            child: ShoeImage(image: product.image, dark: product.dark),
           ),
           const SizedBox(height: 20),
-          Text(
-            product.name,
-            style: Theme.of(context).textTheme.titleLarge,
-          ),
+          Text(product.name, style: Theme.of(context).textTheme.titleLarge),
           const SizedBox(height: 12),
           Text(
             product.description,
-            style: const TextStyle(
-              color: ShopColors.muted,
-              height: 1.5,
-            ),
+            style: const TextStyle(color: ShopColors.muted, height: 1.5),
           ),
           const SizedBox(height: 24),
           Container(
@@ -52,20 +40,11 @@ class CheckoutScreen extends StatelessWidget {
             ),
             child: Column(
               children: [
-                _SummaryRow(
-                  label: 'EU size',
-                  value: '${selection.size}',
-                ),
+                _SummaryRow(label: 'EU size', value: '${selection.size}'),
                 const SizedBox(height: 14),
-                const _SummaryRow(
-                  label: 'Quantity',
-                  value: '1',
-                ),
+                const _SummaryRow(label: 'Quantity', value: '1'),
                 const Divider(height: 30),
-                _SummaryRow(
-                  label: 'Total',
-                  value: product.formattedPrice,
-                ),
+                _SummaryRow(label: 'Total', value: product.formattedPrice),
               ],
             ),
           ),
@@ -93,10 +72,7 @@ class CheckoutScreen extends StatelessWidget {
 }
 
 class _SummaryRow extends StatelessWidget {
-  const _SummaryRow({
-    required this.label,
-    required this.value,
-  });
+  const _SummaryRow({required this.label, required this.value});
 
   final String label;
   final String value;
@@ -107,10 +83,7 @@ class _SummaryRow extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text(label),
-        Text(
-          value,
-          style: const TextStyle(fontWeight: FontWeight.w700),
-        ),
+        Text(value, style: const TextStyle(fontWeight: FontWeight.w700)),
       ],
     );
   }

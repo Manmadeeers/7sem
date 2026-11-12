@@ -40,9 +40,7 @@ class PlatformService {
   static Future<String> getIpAddress() async {
     _requireAndroid();
 
-    final address = await _networkChannel.invokeMethod<String>(
-      'getIpAddress',
-    );
+    final address = await _networkChannel.invokeMethod<String>('getIpAddress');
 
     if (address == null || address.isEmpty) {
       throw PlatformException(
@@ -67,13 +65,10 @@ class PlatformService {
       );
     }
 
-    await _messageChannel.invokeMethod<void>(
-      'composeMessage',
-      {
-        'phoneNumber': phoneNumber.trim(),
-        'body': body,
-      },
-    );
+    await _messageChannel.invokeMethod<void>('composeMessage', {
+      'phoneNumber': phoneNumber.trim(),
+      'body': body,
+    });
   }
 
   static Future<int> getBatteryLevel() async {
