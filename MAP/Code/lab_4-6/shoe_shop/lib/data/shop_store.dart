@@ -343,6 +343,7 @@ class HiveShopStore extends ShopStore {
       final wrongBox = await Hive.openBox<dynamic>(
         demoBoxName,
         encryptionCipher: HiveAesCipher(wrongKey),
+        crashRecovery: false
       );
       final value = wrongBox.get('message');
       await wrongBox.close();
