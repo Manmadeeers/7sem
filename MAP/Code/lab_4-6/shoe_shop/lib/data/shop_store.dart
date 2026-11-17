@@ -25,94 +25,7 @@ abstract class ShopStore extends ChangeNotifier {
   Future<String> demonstrateWrongKey();
 }
 
-class MemoryShopStore extends ShopStore {
-  MemoryShopStore.seeded()
-    : _products = List<Product>.of(catalogProducts),
-      _users = List<ShopUser>.of(seededUsers),
-      _currentUserId = seededUsers.first.id,
-      _favorites = {'anna:lebron'};
 
-  final List<Product> _products;
-  final List<ShopUser> _users;
-  final Set<String> _favorites;
-  String _currentUserId;
-
-  @override
-  List<Product> get products => List.unmodifiable(_products);
-
-  @override
-  List<ShopUser> get users => List.unmodifiable(_users);
-
-  @override
-  ShopUser get currentUser =>
-      _users.firstWhere((user) => user.id == _currentUserId);
-
-  @override
-  String get storageDescription => 'In-memory test storage';
-
-  @override
-  String get keyFingerprint => 'TEST-KEY';
-
-  String _favoriteKey(String productId) => '$_currentUserId:$productId';
-
-  @override
-  bool isFavorite(String productId) =>
-      _favorites.contains(_favoriteKey(productId));
-
-  @override
-  Future<void> selectUser(String userId) async {
-    _currentUserId = userId;
-    notifyListeners();
-  }
-
-  @override
-  Future<void> toggleFavorite(String productId) async {
-    final key = _favoriteKey(productId);
-    if (!_favorites.remove(key)) {
-      _favorites.add(key);
-    }
-    notifyListeners();
-  }
-
-  @override
-  Future<void> addProduct(Product product) async {
-    _checkManagePermission();
-    _products.add(product);
-    notifyListeners();
-  }
-
-  @override
-  Future<void> updateProduct(Product product) async {
-    _checkManagePermission();
-    final index = _products.indexWhere((item) => item.id == product.id);
-    if (index >= 0) {
-      _products[index] = product;
-      notifyListeners();
-    }
-  }
-
-  @override
-  Future<void> deleteProduct(String productId) async {
-    _checkManagePermission();
-    _products.removeWhere((item) => item.id == productId);
-    _favorites.removeWhere((key) => key.endsWith(':$productId'));
-    notifyListeners();
-  }
-
-  @override
-  Future<String> compactBoxes() async =>
-      'Test storage has no files to compact.';
-
-  @override
-  Future<String> demonstrateWrongKey() async =>
-      'Access denied: the second key cannot decrypt the box.';
-
-  void _checkManagePermission() {
-    if (!currentUser.role.canManageProducts) {
-      throw StateError('Only a manager or administrator can change products.');
-    }
-  }
-}
 
 class HiveShopStore extends ShopStore {
   HiveShopStore._({
@@ -360,3 +273,96 @@ class HiveShopStore extends ShopStore {
     }
   }
 }
+
+
+
+
+class MemoryShopStore extends ShopStore {
+  MemoryShopStore.seeded()
+    : _products = List<Product>.of(catalogProducts),
+      _users = List<ShopUser>.of(seededUsers),
+      _currentUserId = seededUsers.first.id,
+      _favorites = {'anna:lebron'};
+
+  final List<Product> _products;
+  final List<ShopUser> _users;
+  final Set<String> _favorites;
+  String _currentUserId;
+
+  @override
+  List<Product> get products => List.unmodifiable(_products);
+
+  @override
+  List<ShopUser> get users => List.unmodifiable(_users);
+
+  @override
+  ShopUser get currentUser =>
+      _users.firstWhere((user) => user.id == _currentUserId);
+
+  @override
+  String get storageDescription => 'In-memory test storage';
+
+  @override
+  String get keyFingerprint => 'TEST-KEY';
+
+  String _favoriteKey(String productId) => '$_currentUserId:$productId';
+
+  @override
+  bool isFavorite(String productId) =>
+      _favorites.contains(_favoriteKey(productId));
+
+  @override
+  Future<void> selectUser(String userId) async {
+    _currentUserId = userId;
+    notifyListeners();
+  }
+
+  @override
+  Future<void> toggleFavorite(String productId) async {
+    final key = _favoriteKey(productId);
+    if (!_favorites.remove(key)) {
+      _favorites.add(key);
+    }
+    notifyListeners();
+  }
+
+  @override
+  Future<void> addProduct(Product product) async {
+    _checkManagePermission();
+    _products.add(product);
+    notifyListeners();
+  }
+
+  @override
+  Future<void> updateProduct(Product product) async {
+    _checkManagePermission();
+    final index = _products.indexWhere((item) => item.id == product.id);
+    if (index >= 0) {
+      _products[index] = product;
+      notifyListeners();
+    }
+  }
+
+  @override
+  Future<void> deleteProduct(String productId) async {
+    _checkManagePermission();
+    _products.removeWhere((item) => item.id == productId);
+    _favorites.removeWhere((key) => key.endsWith(':$productId'));
+    notifyListeners();
+  }
+
+  @override
+  Future<String> compactBoxes() async =>
+      'Test storage has no files to compact.';
+
+  @override
+  Future<String> demonstrateWrongKey() async =>
+      'Access denied: the second key cannot decrypt the box.';
+
+  void _checkManagePermission() {
+    if (!currentUser.role.canManageProducts) {
+      throw StateError('Only a manager or administrator can change products.');
+    }
+  }
+}
+
