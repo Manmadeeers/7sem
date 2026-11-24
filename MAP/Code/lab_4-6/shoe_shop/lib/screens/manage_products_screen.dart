@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
-import '../data/shop_scope.dart';
+import '../data/shop_store.dart';
 import '../models/product.dart';
 import '../theme.dart';
 import '../widgets/shared.dart';
@@ -29,13 +30,13 @@ class ManageProductsScreen extends StatelessWidget {
       ),
     );
     if (confirmed == true && context.mounted) {
-      await ShopScope.of(context).deleteProduct(product.id);
+      await context.read<ShopStore>().deleteProduct(product.id);
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final store = ShopScope.of(context);
+    final store = context.watch<ShopStore>();
     if (!store.currentUser.role.canManageProducts) {
       return const Scaffold(
         body: Center(child: Text('Manager or administrator role required.')),

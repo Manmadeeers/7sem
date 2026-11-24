@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
-import '../data/shop_scope.dart';
+import '../data/shop_store.dart';
 import '../models/product.dart';
 import '../theme.dart';
 import '../widgets/shared.dart';
@@ -84,8 +85,9 @@ class _DetailScreenState extends State<DetailScreen> {
   @override
   Widget build(BuildContext context) {
     final product = widget.product;
-    final store = ShopScope.of(context);
-    final isFavorite = store.isFavorite(product.id);
+    final isFavorite = context.select<ShopStore, bool>(
+      (store) => store.isFavorite(product.id),
+    );
 
     return Scaffold(
       body: SafeArea(
@@ -103,7 +105,8 @@ class _DetailScreenState extends State<DetailScreen> {
                 trailing: HeaderIcon(
                   key: ValueKey('detail-favorite-${product.id}'),
                   icon: isFavorite ? Icons.favorite : Icons.favorite_border,
-                  onTap: () => store.toggleFavorite(product.id),
+                  onTap: () =>
+                      context.read<ShopStore>().toggleFavorite(product.id),
                 ),
               ),
               Expanded(

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
-import '../data/shop_scope.dart';
+import '../data/shop_store.dart';
 import '../models/product.dart';
 import '../theme.dart';
 import '../widgets/shared.dart';
@@ -11,7 +12,7 @@ class FavoritesScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final store = ShopScope.of(context);
+    final store = context.watch<ShopStore>();
     final favorites = store.products
         .where((product) => store.isFavorite(product.id))
         .toList();
@@ -42,7 +43,8 @@ class FavoritesScreen extends StatelessWidget {
                       builder: (_) => DetailScreen(product: product),
                     ),
                   ),
-                  onRemove: () => store.toggleFavorite(product.id),
+                  onRemove: () =>
+                      context.read<ShopStore>().toggleFavorite(product.id),
                 );
               },
             ),

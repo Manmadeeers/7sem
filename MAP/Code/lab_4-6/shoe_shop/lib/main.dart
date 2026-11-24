@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:provider/provider.dart';
 
-import 'data/shop_scope.dart';
 import 'data/shop_store.dart';
 import 'models/product.dart';
 import 'screens/catalog_screen.dart';
@@ -24,12 +24,14 @@ class ShoeShopApp extends StatelessWidget {
 
   final ShopStore? store;
 
-  static final ShopStore _testStore = MemoryShopStore.seeded();
-
   @override
   Widget build(BuildContext context) {
-    return ShopScope(
-      store: store ?? _testStore,
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider<ShopStore>(
+          create: (_) => store ?? MemoryShopStore.seeded(),
+        ),
+      ],
       child: MaterialApp(
         title: 'Shoe Shop',
         debugShowCheckedModeBanner: false,

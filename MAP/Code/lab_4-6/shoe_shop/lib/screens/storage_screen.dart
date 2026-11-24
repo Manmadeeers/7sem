@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
-import '../data/shop_scope.dart';
+import '../data/shop_store.dart';
 import '../theme.dart';
 import 'platform_demo_screen.dart';
 
@@ -32,7 +33,7 @@ class _StorageScreenState extends State<StorageScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final store = ShopScope.of(context);
+    final store = context.read<ShopStore>();
     return Scaffold(
       appBar: AppBar(title: const Text('Hive storage')),
       body: ListView(

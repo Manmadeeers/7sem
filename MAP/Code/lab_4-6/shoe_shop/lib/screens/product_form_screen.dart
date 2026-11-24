@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
-import '../data/shop_scope.dart';
+import '../data/shop_store.dart';
 import '../models/product.dart';
 
 class ProductFormScreen extends StatefulWidget {
@@ -109,7 +110,7 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
       dark: _dark,
     );
 
-    final store = ShopScope.of(context);
+    final store = context.read<ShopStore>();
     if (_editing) {
       await store.updateProduct(product);
     } else {

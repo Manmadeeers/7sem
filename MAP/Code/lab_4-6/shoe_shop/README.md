@@ -1,6 +1,10 @@
-# Shoe Shop — laboratories 4–6 and 8
+# Shoe Shop — laboratories 4–6, 8 and Provider
 
 The laboratory 4–5 catalog UI is backed by encrypted Hive storage.
+
+Shared application state is exposed with `MultiProvider` and
+`ChangeNotifierProvider`. The implementation notes and the justification for
+the remaining local `setState` calls are in [PROVIDER_REPORT.md](PROVIDER_REPORT.md).
 
 ## Stored data
 

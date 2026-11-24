@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
-import '../data/shop_scope.dart';
+import '../data/shop_store.dart';
 import '../models/product.dart';
 import '../models/shop_user.dart';
 import '../theme.dart';
@@ -15,9 +16,6 @@ class CatalogScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final store = ShopScope.of(context);
-    final products = store.products;
-
     void openDetails(Product product) {
       Navigator.of(context).push<void>(
         MaterialPageRoute<void>(builder: (_) => DetailScreen(product: product)),
@@ -39,9 +37,8 @@ class CatalogScreen extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.only(right: 22, top: 8, bottom: 8),
             child: _UserMenu(
-              users: store.users,
-              selected: store.currentUser,
-              onSelected: store.selectUser,
+              onSelected: (userId) =>
+                  context.read<ShopStore>().selectUser(userId),
             ),
           ),
         ],
@@ -52,15 +49,21 @@ class CatalogScreen extends StatelessWidget {
         child: ListView(
           padding: const EdgeInsets.fromLTRB(22, 0, 22, 100),
           children: [
-            if (products.isNotEmpty)
-              _PromoBanner(
-                onTap: () => openDetails(
-                  products.firstWhere(
-                    (product) => product.id == 'lebron',
-                    orElse: () => products.first,
+            Consumer<ShopStore>(
+              builder: (context, store, _) {
+                final products = store.products;
+                if (products.isEmpty) return const SizedBox.shrink();
+
+                return _PromoBanner(
+                  onTap: () => openDetails(
+                    products.firstWhere(
+                      (product) => product.id == 'lebron',
+                      orElse: () => products.first,
+                    ),
                   ),
-                ),
-              ),
+                );
+              },
+            ),
             const SizedBox(height: 15),
             const PageDots(),
             const SizedBox(height: 22),
@@ -80,32 +83,36 @@ class CatalogScreen extends StatelessWidget {
             const SizedBox(height: 14),
             const _Categories(),
             const SizedBox(height: 24),
-            LayoutBuilder(
-              builder: (context, constraints) {
-                final cardWidth = (constraints.maxWidth - 14) / 2;
+            Consumer<ShopStore>(
+              builder: (context, store, _) => LayoutBuilder(
+                builder: (context, constraints) {
+                  final cardWidth = (constraints.maxWidth - 14) / 2;
 
-                return GridView(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  padding: EdgeInsets.zero,
-                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,
-                    crossAxisSpacing: 14,
-                    mainAxisSpacing: 14,
-                    mainAxisExtent: cardWidth * .95 + 72,
-                  ),
-                  children: [
-                    for (final product in products)
-                      _ProductCard(
-                        key: ValueKey('product-${product.id}'),
-                        product: product,
-                        onTap: () => openDetails(product),
-                        favorite: store.isFavorite(product.id),
-                        onFavorite: () => store.toggleFavorite(product.id),
-                      ),
-                  ],
-                );
-              },
+                  return GridView(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    padding: EdgeInsets.zero,
+                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 2,
+                      crossAxisSpacing: 14,
+                      mainAxisSpacing: 14,
+                      mainAxisExtent: cardWidth * .95 + 72,
+                    ),
+                    children: [
+                      for (final product in store.products)
+                        _ProductCard(
+                          key: ValueKey('product-${product.id}'),
+                          product: product,
+                          onTap: () => openDetails(product),
+                          favorite: store.isFavorite(product.id),
+                          onFavorite: () => context
+                              .read<ShopStore>()
+                              .toggleFavorite(product.id),
+                        ),
+                    ],
+                  );
+                },
+              ),
             ),
           ],
         ),
@@ -113,25 +120,26 @@ class CatalogScreen extends StatelessWidget {
       bottomNavigationBar: SafeArea(
         top: false,
         minimum: const EdgeInsets.fromLTRB(22, 0, 22, 12),
-        child: _BottomBar(currentUser: store.currentUser),
+        child: const _BottomBar(),
       ),
     );
   }
 }
 
 class _UserMenu extends StatelessWidget {
-  const _UserMenu({
-    required this.users,
-    required this.selected,
-    required this.onSelected,
-  });
+  const _UserMenu({required this.onSelected});
 
-  final List<ShopUser> users;
-  final ShopUser selected;
   final ValueChanged<String> onSelected;
 
   @override
   Widget build(BuildContext context) {
+    final users = context.select<ShopStore, List<ShopUser>>(
+      (store) => store.users,
+    );
+    final selected = context.select<ShopStore, ShopUser>(
+      (store) => store.currentUser,
+    );
+
     return PopupMenuButton<String>(
       key: const ValueKey('user-menu'),
       tooltip: 'Switch user',
@@ -458,12 +466,13 @@ class _ProductCard extends StatelessWidget {
 }
 
 class _BottomBar extends StatelessWidget {
-  const _BottomBar({required this.currentUser});
-
-  final ShopUser currentUser;
+  const _BottomBar();
 
   @override
   Widget build(BuildContext context) {
+    final currentUser = context.select<ShopStore, ShopUser>(
+      (store) => store.currentUser,
+    );
     const icons = [
       Icons.home_rounded,
       Icons.favorite_outline_rounded,

@@ -1,9 +1,28 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shoe_shop/data/shop_store.dart';
 import 'package:shoe_shop/main.dart';
 import 'package:shoe_shop/models/product.dart';
 
 void main() {
+  testWidgets('Provider shares user changes across unrelated UI branches', (
+    tester,
+  ) async {
+    await tester.pumpWidget(ShoeShopApp(store: MemoryShopStore.seeded()));
+    await tester.pumpAndSettle();
+
+    expect(find.byIcon(Icons.lock), findsOneWidget);
+
+    await tester.tap(find.byKey(const ValueKey('user-menu')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Max'));
+    await tester.pumpAndSettle();
+
+    expect(find.byIcon(Icons.lock), findsNothing);
+    expect(find.text('M'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('Selected product is passed to details', (tester) async {
     tester.view.physicalSize = const Size(390, 844);
     tester.view.devicePixelRatio = 1;
